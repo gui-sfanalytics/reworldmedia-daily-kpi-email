@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+
+<style>
+  @media (prefers-color-scheme: dark) {
+
+  html,
+  body {
+    background: #f2f2f2 !important;
+    background-color: #f2f2f2 !important;
+    color: #111111 !important;
+  }
+
+  .report {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+}
+
+html {
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+}
+
+body {
+  margin: 0 !important;
+  padding: 24px !important;
+
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+
+  color: #111111 !important;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+.report {
+  width: 640px;
+
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+
+  border-radius: 10px;
+  overflow: hidden;
+
+  padding: 22px 24px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2f2148;
+  margin-bottom: 10px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #cfcfcf;
+  margin: 0 0 20px 0;
+}
+
+.product-row {
+  display: grid;
+  grid-template-columns: 145px 165px 70px 250px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.product-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #111;
+  line-height: 1.05;
+  max-width: 115px;
+}
+
+.product-link {
+  font-size: 22px;
+  color: #111;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.kpi-title {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+}
+
+.delta-box {
+  width: 92px;
+  height: 40px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 7px;
+}
+
+.positive {
+  background: #6aa884;
+}
+
+.negative {
+  background: #d73569;
+}
+
+.current {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.current.positive-text {
+  color: #6aa884;
+}
+
+.current.negative-text {
+  color: #d73569;
+}
+
+.previous {
+  font-size: 12px;
+  color: #000;
+  margin-top: 6px;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.achievement.positive-text {
+  color: #6aa884;
+}
+
+.achievement.negative-text {
+  color: #d73569;
+}
+
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 8px solid #000;
+  margin-right: 6px;
+}
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid #000;
+  margin-right: 6px;
+}
+
+.slider-area {
+  position: relative;
+  height: 48px;
+}
+
+.current-value {
+  position: absolute;
+  top: -25px;
+  transform: translateX(-50%);
+  font-size: 19px;
+  font-weight: bold;
+  color: #000;
+}
+
+.slider {
+  position: relative;
+  width: 235px;
+  height: 11px;
+  background: #d9d9d9;
+  margin-top: 11px;
+}
+
+.slider-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 11px;
+}
+
+.slider-fill.positive {
+  background: #6aa884;
+}
+
+.slider-fill.negative {
+  background: #d73569;
+}
+
+.current-marker {
+  position: absolute;
+  top: -8px;
+  width: 3px;
+  height: 26px;
+  background: #000;
+}
+
+.target-marker {
+  position: absolute;
+  top: -6px;
+  height: 23px;
+  border-left: 2px dotted #000;
+}
+
+.slider-label {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  font-size: 13px;
+  color: #333;
+}
+
+.target-label {
+  position: absolute;
+  top: 32px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+
+.more {
+  text-align: center;
+  color: #9b3d8e;
+  font-size: 18px;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div class="report">
+
+  <div class="section-title">Top 5 Abonnements</div>
+  <hr class="divider" />
+
+  
+  <div class="product-row">
+
+    <div style="display:flex; align-items:center;">
+      <div class="product-name">SCIENCE & VIE JUNIOR</div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Abo Print (Vs N-1)</div>
+
+      <div class="kpi-content">
+        <div class="delta-box positive">
+          +0%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            161
+          </div>
+          <div class="previous">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -94%
+    </div>
+
+    <div class="slider-area">
+
+      <div class="current-value" style="left: 5.1%;">
+        161
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 5.1%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 5.1%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">Année à année</div>
+
+      <div class="target-label" style="left: 92.6%;">
+        Target : 2903
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="product-row">
+
+    <div style="display:flex; align-items:center;">
+      <div class="product-name">SCIENCE & VIE DECOUVERTES</div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Abo Print (Vs N-1)</div>
+
+      <div class="kpi-content">
+        <div class="delta-box positive">
+          +0%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            86
+          </div>
+          <div class="previous">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -93%
+    </div>
+
+    <div class="slider-area">
+
+      <div class="current-value" style="left: 6.1%;">
+        86
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 6.1%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 6.1%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">Année à année</div>
+
+      <div class="target-label" style="left: 92.6%;">
+        Target : 1311
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="product-row">
+
+    <div style="display:flex; align-items:center;">
+      <div class="product-name">MON PETIT SCIENCE & VIE AVEC NANO</div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Abo Print (Vs N-1)</div>
+
+      <div class="kpi-content">
+        <div class="delta-box positive">
+          +0%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            81
+          </div>
+          <div class="previous">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -92%
+    </div>
+
+    <div class="slider-area">
+
+      <div class="current-value" style="left: 7.3%;">
+        81
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 7.3%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 7.3%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">Année à année</div>
+
+      <div class="target-label" style="left: 92.6%;">
+        Target : 1030
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="product-row">
+
+    <div style="display:flex; align-items:center;">
+      <div class="product-name">TELE STAR</div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Abo Print (Vs N-1)</div>
+
+      <div class="kpi-content">
+        <div class="delta-box positive">
+          +0%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            111
+          </div>
+          <div class="previous">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -95%
+    </div>
+
+    <div class="slider-area">
+
+      <div class="current-value" style="left: 4.7%;">
+        111
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 4.7%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 4.7%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">Année à année</div>
+
+      <div class="target-label" style="left: 92.6%;">
+        Target : 2202
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="product-row">
+
+    <div style="display:flex; align-items:center;">
+      <div class="product-name">MODES ET TRAVAUX</div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Abo Print (Vs N-1)</div>
+
+      <div class="kpi-content">
+        <div class="delta-box positive">
+          +0%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            59
+          </div>
+          <div class="previous">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -86%
+    </div>
+
+    <div class="slider-area">
+
+      <div class="current-value" style="left: 13.2%;">
+        59
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 13.2%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 13.2%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">Année à année</div>
+
+      <div class="target-label" style="left: 92.6%;">
+        Target : 413
+      </div>
+
+    </div>
+
+  </div>
+  
+
+  <div class="more">Voir plus ...</div>
+
+</div>
+</body>
+</html>

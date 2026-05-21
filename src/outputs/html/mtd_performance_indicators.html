@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+
+<style>
+  @media (prefers-color-scheme: dark) {
+
+  html,
+  body {
+    background: #f2f2f2 !important;
+    background-color: #f2f2f2 !important;
+    color: #111111 !important;
+  }
+
+  .report {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+}
+
+html {
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+}
+
+body {
+  margin: 0 !important;
+  padding: 24px !important;
+
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+
+  color: #111111 !important;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+.report {
+  width: 640px;
+
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+
+  border-radius: 10px;
+  overflow: hidden;
+
+  padding: 22px 24px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.section-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #cfcfcf;
+  margin: 0 0 18px 0;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: 200px 50px 250px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.kpi-title {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.kpi-left-content {
+  display: flex;
+  align-items: center;
+}
+
+.delta-box {
+  width: 85px;
+  height: 38px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 7px;
+}
+
+.positive {
+  background: #6aa884;
+}
+
+.negative {
+  background: #d73569;
+}
+
+.current {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.current.positive-text {
+  color: #6aa884;
+}
+
+.current.negative-text {
+  color: #d73569;
+}
+
+.previous {
+  font-size: 12px;
+  color: #000;
+  margin-top: 6px;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+.arrow-up {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 8px solid #000;
+  margin-right: 6px;
+}
+
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid #000;
+  margin-right: 6px;
+}
+
+.achievement.positive-text {
+  color: #6aa884;
+}
+
+.achievement.negative-text {
+  color: #d73569;
+}
+
+.slider-area {
+  position: relative;
+  height: 58px;
+  overflow: visible;
+}
+
+.slider {
+  position: relative;
+  width: 230px;
+  height: 10px;
+  background: #d9d9d9;
+  margin-top: 16px;
+}
+
+.slider-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 10px;
+}
+
+.slider-fill.positive {
+  background: #6aa884;
+}
+
+.slider-fill.negative {
+  background: #d73569;
+}
+
+.current-marker {
+  position: absolute;
+  top: -9px;
+  width: 3px;
+  height: 25px;
+  background: #000;
+}
+
+.current-value {
+  position: absolute;
+  top: -18px;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap;
+  min-width: 54px;
+  text-align: center;
+  line-height: 16px;
+  z-index: 3;
+}
+
+.target-marker {
+  position: absolute;
+  top: -5px;
+  height: 21px;
+  border-left: 2px dotted #000;
+}
+
+.slider-label {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  font-size: 12px;
+  color: #000;
+  white-space: nowrap;
+  max-width: 125px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.target-label {
+  position: absolute;
+  top: 30px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: center;
+  z-index: 2;
+}
+</style>
+</head>
+
+<body>
+<div class="report">
+
+  <div class="section-title">Indicateurs de Performance</div>
+  <hr class="divider" />
+
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Abo Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box negative">
+          -15%
+        </div>
+
+        <div>
+          <div class="current negative-text">
+            1 116
+          </div>
+          <div class="previous">1 314</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -3%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 89.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        1 116
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 89.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 89.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Abo Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 92.6%;
+          
+        "
+      >
+        Target : 1 153
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Abo Print Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box negative">
+          -17%
+        </div>
+
+        <div>
+          <div class="current negative-text">
+            1 035
+          </div>
+          <div class="previous">1 247</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -5%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 88.1%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        1 035
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 88.1%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 88.1%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Abo Print Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 92.6%;
+          
+        "
+      >
+        Target : 1 088
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Réabo Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box negative">
+          -31%
+        </div>
+
+        <div>
+          <div class="current negative-text">
+            127
+          </div>
+          <div class="previous">183</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement positive-text">
+      <div class="arrow-up"></div>
+      +72%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 92.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        127
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill positive"
+          style="width: 92.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 92.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 54.0%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Réabo Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 54.0%;
+          
+        "
+      >
+        Target : 74
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Abo + Reabo Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box negative">
+          -23%
+        </div>
+
+        <div>
+          <div class="current negative-text">
+            1 243
+          </div>
+          <div class="previous">1 497</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement positive-text">
+      <div class="arrow-up"></div>
+      +1%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 92.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        1 243
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill positive"
+          style="width: 92.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 92.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 91.4%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Abo+Reabo Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 91.4%;
+          
+        "
+      >
+        Target : 1 227
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Total VAN Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box positive">
+          +15%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            360
+          </div>
+          <div class="previous">314</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement positive-text">
+      <div class="arrow-up"></div>
+      +21%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 92.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        360
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill positive"
+          style="width: 92.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 92.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 76.4%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        VAN Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 76.4%;
+          
+        "
+      >
+        Target : 297
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">VAD Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box positive">
+          +115%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            269
+          </div>
+          <div class="previous">125</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement positive-text">
+      <div class="arrow-up"></div>
+      +88%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 92.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        269
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill positive"
+          style="width: 92.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 92.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 49.2%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        VAD Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 49.2%;
+          
+        "
+      >
+        Target : 143
+      </div>
+
+    </div>
+
+  </div>
+  
+
+</div>
+</body>
+</html>

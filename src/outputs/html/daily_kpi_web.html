@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+
+<style>
+  @media (prefers-color-scheme: dark) {
+
+  html,
+  body {
+    background: #f2f2f2 !important;
+    background-color: #f2f2f2 !important;
+    color: #111111 !important;
+  }
+
+  .report {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+}
+
+html {
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+}
+
+body {
+  margin: 0 !important;
+  padding: 24px !important;
+
+  background: #f2f2f2 !important;
+  background-color: #f2f2f2 !important;
+
+  color: #111111 !important;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+.report {
+  width: 640px;
+
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+
+  border-radius: 10px;
+  overflow: hidden;
+
+  padding: 22px 24px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.section-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #cfcfcf;
+  margin: 0 0 22px 0;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 46px;
+  row-gap: 14px;
+}
+
+.kpi-title {
+  font-size: 12px;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+}
+
+.delta-box {
+  width: 94px;
+  height: 42px;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.positive {
+  background: #6aa884;
+}
+
+.negative {
+  background: #d73569;
+}
+
+.current {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.positive-text {
+  color: #6aa884;
+}
+
+.negative-text {
+  color: #d73569;
+}
+
+.previous {
+  font-size: 12px;
+  color: #000;
+  margin-top: 7px;
+}
+</style>
+</head>
+
+<body>
+      <div style="
+        width: 688px;
+        margin: 0 auto 22px auto;
+        background: #000;
+        color: white;
+        text-align: center;
+        padding: 10px 0;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+      ">
+        (Jour 19/05/2026 Vs 20/05/2025)
+      </div>
+<div class="report">
+  <div class="section-title">Indicateurs Web</div>
+  <hr class="divider" />
+
+  <div class="kpi-grid">
+
+    <div>
+      <div class="kpi-title">Sessions</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-3.52%</div>
+        <div>
+          <div class="current negative-text">5 618</div>
+          <div class="previous">5 823</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Conversions</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-7.72%</div>
+        <div>
+          <div class="current negative-text">103</div>
+          <div class="previous">113</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Taux de conversion</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-0.12</div>
+        <div>
+          <div class="current negative-text">2.71%</div>
+          <div class="previous">2.83%</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Mises au panier</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-9.49%</div>
+        <div>
+          <div class="current negative-text">346</div>
+          <div class="previous">382</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Taux de mise au panier</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-0.41</div>
+        <div>
+          <div class="current negative-text">6.16%</div>
+          <div class="previous">6.57%</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Taux de finalisation de panier</div>
+      <div class="kpi-content">
+        <div class="delta-box negative">-0.26</div>
+        <div>
+          <div class="current negative-text">30.12%</div>
+          <div class="previous">30.38%</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

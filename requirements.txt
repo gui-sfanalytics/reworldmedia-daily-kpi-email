@@ -1,5 +1,8 @@
 google-cloud-bigquery
 google-cloud-secret-manager
 jinja2
-sendgrid
 playwright
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+matplotlib
