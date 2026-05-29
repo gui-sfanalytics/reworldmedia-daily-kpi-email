@@ -134,34 +134,28 @@ def main_process():
     run_date_folder = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
 
 
-    def upload_to_gcs(local_path, bucket_name, destination_blob_name):
-        if ENV == "local":
-            print(f"[LOCAL] Skip upload {local_path}")
-            return None
-        
-        print("STEP 1")
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
+    def upload_to_gcs(local_file_path, bucket_name, destination_blob_name):
+        storage_client = storage.Client()
 
+        bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
-        blob.upload_from_filename(local_path)
+        blob.upload_from_filename(local_file_path)
 
-        credentials, _ = default()
+        credentials, project_id = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+
         credentials.refresh(Request())
 
-        signer = iam.Signer(
-            Request(),
-            credentials,
-            credentials.service_account_email
-        )
+        service_account_email = credentials.service_account_email
 
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(days=7),
             method="GET",
-            credentials=credentials,
-            signer=signer
+            service_account_email=service_account_email,
+            access_token=credentials.token,
         )
 
         return url
