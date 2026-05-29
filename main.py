@@ -122,9 +122,11 @@ def main_process():
         if ENV == "local":
             print(f"[LOCAL] Skip upload {local_path}")
             return None
-
+        
+        print("STEP 1")
         client = storage.Client()
         bucket = client.bucket(bucket_name)
+
         blob = bucket.blob(destination_blob_name)
 
         blob.upload_from_filename(local_path)
@@ -148,7 +150,9 @@ def main_process():
 
         return url
 
+    print("STEP 2")
     client = bigquery.Client()
+    print("STEP 3")
 
     env = Environment(
         loader=FileSystemLoader("templates")
@@ -538,11 +542,14 @@ app = Flask(__name__)
 @app.route("/")
 def run():
     try:
+        print("ENTER MAIN")
         main_process()
         return "OK", 200
     except Exception as e:
-        print(str(e))
-        return f"Error: {str(e)}", 500
+        import traceback
+        print("ERROR:", e)
+        print(traceback.format_exc())
+        return "ERROR", 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
