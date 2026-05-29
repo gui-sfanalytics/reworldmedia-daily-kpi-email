@@ -125,7 +125,14 @@ def main_process():
 
         blob.upload_from_filename(local_path)
 
-        url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
+        #url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
+
+        #url signés
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(days=30),
+            method="GET"
+        )
 
         print(f"Uploaded {local_path} to {url}")
 
