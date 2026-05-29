@@ -1,6 +1,7 @@
 import sys
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
+from werkzeug.exceptions import HTTPException
 
 import os
 
@@ -36,6 +37,7 @@ from datetime import datetime, timedelta
 
 import traceback
 from flask import jsonify
+from flask import request
 
 ENV = os.getenv("ENV", "local") 
 HTML_OUTPUT_DIR = "src/outputs/html"
@@ -544,23 +546,40 @@ def main_process():
 
 app = Flask(__name__)
 
-@app.route("/")
-def run():
+@app.before_request
+def log_request():
+    print(f"REQUEST: {request.method} {request.path}")
+
+@app.route("/", methods=["GET"])
+def healthcheck():
+    return "OK", 200
+
+@app.route("/run", methods=["GET", "POST"])
+def run_job():
     try:
-        print("ENTER MAIN")
+        print("Process started")
+
         main_process()
-        return "OK", 200
-    except Exception as e:
-        import traceback
-        print("ERROR:", e)
-        print(traceback.format_exc())
-        return "ERROR", 500
-    
+
+        print("Process finished")
+        return "Job executed successfully", 200
+
+    except Exception:
+        print("=== ERREUR PYTHON ===")
+        traceback.print_exc()
+        return f"<pre>{traceback.format_exc()}</pre>", 500
+
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
 @app.errorhandler(Exception)
 def handle_exception(e):
-    print("=== EXCEPTION ===")
+    if isinstance(e, HTTPException):
+        return e
+
     traceback.print_exc()
-    return jsonify({"error": str(e)}), 500
+    return f"<pre>{traceback.format_exc()}</pre>", 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
