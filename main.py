@@ -7,6 +7,7 @@ from google.cloud import bigquery, storage
 from flask import Flask
 
 import base64
+import requests
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -23,6 +24,7 @@ from src.charts import create_subscription_charts
 
 from datetime import datetime, timedelta
 
+ENV = os.getenv("ENV", "local") 
 HTML_OUTPUT_DIR = "src/outputs/html"
 PNG_OUTPUT_DIR = "src/outputs/png"
 SQL_DIR = "src/queries"
@@ -113,19 +115,31 @@ def main_process():
     run_date_folder = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
 
     def upload_to_gcs(local_path, bucket_name, destination_blob_name):
+        if ENV == "local":
+            print(f"[LOCAL] Skip upload {local_path}")
+            return None
+
         client = storage.Client()
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
 
         blob.upload_from_filename(local_path)
 
-        print(f"Uploaded {local_path} to gs://{bucket_name}/{destination_blob_name}")
+        url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
+
+        print(f"Uploaded {local_path} to {url}")
+
+        return url
 
     client = bigquery.Client()
 
     env = Environment(
         loader=FileSystemLoader("templates")
     )
+
+    # -----------------------------
+    # Appel des queries
+    # -----------------------------
 
 
     def generate_period_report(period_name, query_file, product_query_file, report_title, current_date, previous_date):
@@ -196,11 +210,12 @@ def main_process():
 
         html_to_png(html_file, png_file, width=720, height=250)
 
-        upload_to_gcs(
+        png_url = upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
+        image_urls[f"{period_name}_kpi_web"] = png_url
 
         ## Performance indicators
         template_perf = env.get_template("performance_indicators.html")
@@ -220,11 +235,12 @@ def main_process():
 
         html_to_png(html_file, png_file, width=720, height=560)
 
-        upload_to_gcs(
+        png_url = upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
+        image_urls[f"{period_name}_performance_indicators"] = png_url
 
         template_top = env.get_template("top_subscriptions.html")
         html_top = template_top.render(top_subscriptions=top_subscriptions,
@@ -240,11 +256,12 @@ def main_process():
 
         html_to_png(html_file, png_file, width=720, height=630)
 
-        upload_to_gcs(
+        png_url = upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
+        image_urls[f"{period_name}_top_subscriptions"] = png_url
 
     def get_subscription_chart_data():
         with open(os.path.join(SQL_DIR, "charts.sql"), "r", encoding="utf-8") as f:
@@ -314,11 +331,8 @@ def main_process():
             "months_ytd": months_ytd,
     }
 
-    # -----------------------------
-    # Appel des queries
-    # -----------------------------
-
     dates = compute_dates(report_date)
+    image_urls = {}
 
     generate_period_report(
         "daily",
@@ -355,8 +369,17 @@ def main_process():
         **chart_data
     )
 
+    chart_url = upload_to_gcs(
+        charts_path,
+        "kpi-email-storage",
+        f"{run_date_folder}/subscription_charts.png"
+    )
+
+    image_urls["subscription_charts"] = chart_url
+
+
     # -----------------------------
-    # GMAIL API
+    # setup email
     # -----------------------------
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
@@ -387,57 +410,85 @@ def main_process():
 
     service = build("gmail", "v1", credentials=creds)
 
+    def send_email_n8n(html, image_urls):
+        url = "https://app.starfox-analytics.com/webhook/gmail-send-html"
+
+        # inject images dynamiques
+        for key, value in image_urls.items():
+            if value:
+                html += f'<br><img src="{value}" width="700">'
+
+        payload = {
+            "to": "guillaume@starfox-analytics.com",
+            "subject": "Daily KPI Report",
+            "html": html
+        }
+
+        response = requests.post(url, json=payload)
+
+        print("n8n:", response.status_code, response.text)
+
+        if response.status_code >= 300:
+            raise Exception("Email failed via n8n")
+
     # -----------------------------
     # EMAIL
     # -----------------------------
-
-    message = MIMEMultipart("mixed")
-    related = MIMEMultipart("related")
-    message.attach(related)
-
-    message["Subject"] = "Daily KPI Report"
-    message["From"] = "guillaume@starfox-analytics.com"
-    message["To"] = "guillaume@starfox-analytics.com"
-    message.preamble = "This is a multi-part message in MIME format."
 
     html = build_mail_html(
         report_date=dates["report_day"]
     )
 
-    related.attach(MIMEText(html, "html", "utf-8"))
+    if ENV == "local":
+        print("Mode LOCAL → Gmail API")
 
-    def attach_image(message, file_path, cid):
-        with open(PNG_OUTPUT_DIR + "/" + file_path, "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", f"<{cid}>")
-            img.add_header("Content-Disposition", "inline", filename=file_path)
-            message.attach(img)
+        message = MIMEMultipart("mixed")
+        related = MIMEMultipart("related")
+        message.attach(related)
 
+        message["Subject"] = "Daily KPI Report"
+        message["From"] = "guillaume@starfox-analytics.com"
+        message["To"] = "guillaume@starfox-analytics.com"
 
-    attach_image(related, "daily_kpi_web.png", "daily_web")
-    attach_image(related, "daily_performance_indicators.png", "daily_performance")
-    attach_image(related, "daily_top_subscriptions.png", "daily_top_subscriptions")
+        related.attach(MIMEText(html, "html", "utf-8"))
 
-    attach_image(related, "mtd_kpi_web.png", "mtd_web")
-    attach_image(related, "mtd_performance_indicators.png", "mtd_performance")
-    attach_image(related, "mtd_top_subscriptions.png", "mtd_top_subscriptions")
+        def attach_image(message, file_path, cid):
+            with open(PNG_OUTPUT_DIR + "/" + file_path, "rb") as f:
+                img = MIMEImage(f.read())
+                img.add_header("Content-ID", f"<{cid}>")
+                message.attach(img)
 
-    attach_image(related, "ytd_kpi_web.png", "ytd_web")
-    attach_image(related, "ytd_performance_indicators.png", "ytd_performance")
-    attach_image(related, "ytd_top_subscriptions.png", "ytd_top_subscriptions")
+        attach_image(related, "daily_kpi_web.png", "daily_web")
+        attach_image(related, "daily_performance_indicators.png", "daily_performance")
+        attach_image(related, "daily_top_subscriptions.png", "daily_top_subscriptions")
 
-    attach_image(related, "subscription_charts.png", "subscription_charts")
+        attach_image(related, "mtd_kpi_web.png", "mtd_web")
+        attach_image(related, "mtd_performance_indicators.png", "mtd_performance")
+        attach_image(related, "mtd_top_subscriptions.png", "mtd_top_subscriptions")
 
-    raw = base64.urlsafe_b64encode(
-        message.as_bytes()
-    ).decode()
+        attach_image(related, "ytd_kpi_web.png", "ytd_web")
+        attach_image(related, "ytd_performance_indicators.png", "ytd_performance")
+        attach_image(related, "ytd_top_subscriptions.png", "ytd_top_subscriptions")
 
-    service.users().messages().send(
-        userId="me",
-        body={"raw": raw}
-    ).execute()
+        attach_image(related, "subscription_charts.png", "subscription_charts")
 
-    print("Email sent")
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        service.users().messages().send(
+            userId="me",
+            body={"raw": raw}
+        ).execute()
+
+        print("Email sent (LOCAL Gmail)")
+
+    else:
+        print("Mode GCP → n8n")
+
+        send_email_n8n(html, image_urls)
+
+    # -----------------------------
+    # Setup de l'app
+    # -----------------------------
 
 app = Flask(__name__)
 
