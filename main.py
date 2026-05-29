@@ -191,16 +191,16 @@ def main_process():
         html_file = f"{HTML_OUTPUT_DIR}/{period_name}_kpi_web.html"
         png_file = f"{PNG_OUTPUT_DIR}/{period_name}_kpi_web.png"
 
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        html_to_png(html_file, png_file, width=720, height=250)
+
         upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
-
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        html_to_png(html_file, png_file, width=720, height=250)
 
         ## Performance indicators
         template_perf = env.get_template("performance_indicators.html")
@@ -215,16 +215,16 @@ def main_process():
         html_file = f"{HTML_OUTPUT_DIR}/{period_name}_performance_indicators.html"
         png_file = f"{PNG_OUTPUT_DIR}/{period_name}_performance_indicators.png"
 
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(html_perf)
+
+        html_to_png(html_file, png_file, width=720, height=560)
+
         upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
-
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(html_perf)
-
-        html_to_png(html_file, png_file, width=720, height=560)
 
         template_top = env.get_template("top_subscriptions.html")
         html_top = template_top.render(top_subscriptions=top_subscriptions,
@@ -235,16 +235,16 @@ def main_process():
         html_file = f"{HTML_OUTPUT_DIR}/{period_name}_top_subscriptions.html"
         png_file = f"{PNG_OUTPUT_DIR}/{period_name}_top_subscriptions.png"
 
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(html_top)
+
+        html_to_png(html_file, png_file, width=720, height=630)
+
         upload_to_gcs(
             png_file,
             "kpi-email-storage",  # nom du bucket
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
-
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(html_top)
-
-        html_to_png(html_file, png_file, width=720, height=630)
 
     def get_subscription_chart_data():
         with open(os.path.join(SQL_DIR, "charts.sql"), "r", encoding="utf-8") as f:
