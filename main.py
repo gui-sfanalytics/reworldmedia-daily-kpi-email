@@ -100,7 +100,13 @@ def main_process():
 
     def html_to_png(html_path, png_path, width=640, height=520):
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage"
+                ]
+            )
 
             page = browser.new_page(
                 viewport={
