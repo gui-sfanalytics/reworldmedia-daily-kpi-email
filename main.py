@@ -19,7 +19,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from google.auth import default
 credentials, project = default()
-from google.auth.iam import Signer
+from google.auth import iam
+
 import google.cloud.storage
 
 from src.data import calcul_data, calcul_data_product
@@ -131,11 +132,18 @@ def main_process():
         credentials, _ = default()
         credentials.refresh(Request())
 
+        signer = iam.Signer(
+            Request(),
+            credentials,
+            credentials.service_account_email
+        )
+
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(days=7),
             method="GET",
-            credentials=credentials 
+            credentials=credentials,
+            signer=signer
         )
 
         return url
