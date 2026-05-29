@@ -19,6 +19,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from google.auth import default
 from google.auth.iam import Signer
+import google.cloud.storage
 
 from src.data import calcul_data, calcul_data_product
 from templates.full_mail import build_mail_html
@@ -34,6 +35,7 @@ os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
 os.makedirs(SQL_DIR, exist_ok=True)
 
+print("STORAGE VERSION:", google.cloud.storage.__version__)
 
 #variable globale
 #report_date =  "26/05/2026";
@@ -125,7 +127,6 @@ def main_process():
 
         blob.upload_from_filename(local_path)
 
-        # ✅ FIX ICI
         credentials, _ = default()
         request = Request()
         credentials.refresh(request)
