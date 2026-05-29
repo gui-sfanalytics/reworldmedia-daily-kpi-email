@@ -128,11 +128,14 @@ def main_process():
 
         blob.upload_from_filename(local_path)
 
+        credentials, _ = default()
+        credentials.refresh(Request())
+
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(days=7),
             method="GET",
-            service_account_email=credentials.service_account_email
+            credentials=credentials 
         )
 
         return url
