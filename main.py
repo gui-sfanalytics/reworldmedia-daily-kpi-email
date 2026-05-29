@@ -3,7 +3,6 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from matplotlib import dates
 from playwright.sync_api import sync_playwright
-from google.cloud import bigquery, storage
 from flask import Flask
 
 import base64
@@ -13,10 +12,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
+from google.cloud import bigquery, storage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from google.auth import default
+from google.auth.iam import Signer
 
 from src.data import calcul_data, calcul_data_product
 from templates.full_mail import build_mail_html
@@ -111,6 +113,7 @@ def main_process():
 
     run_date_folder = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
 
+
     def upload_to_gcs(local_path, bucket_name, destination_blob_name):
         if ENV == "local":
             print(f"[LOCAL] Skip upload {local_path}")
@@ -122,16 +125,24 @@ def main_process():
 
         blob.upload_from_filename(local_path)
 
-        #url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
+        # ✅ FIX ICI
+        credentials, _ = default()
+        request = Request()
+        credentials.refresh(request)
 
-        #url signés
+        signer = Signer(
+            request,
+            credentials,
+            credentials.service_account_email
+        )
+
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(days=7),
-            method="GET"
+            method="GET",
+            credentials=credentials,
+            signer=signer
         )
-
-        print(f"Uploaded {local_path} to {url}")
 
         return url
 
