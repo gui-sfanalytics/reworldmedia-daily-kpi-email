@@ -1,6 +1,7 @@
 import os
 
 from jinja2 import Environment, FileSystemLoader
+from matplotlib import dates
 from playwright.sync_api import sync_playwright
 from google.cloud import bigquery
 
@@ -19,6 +20,8 @@ from src.data import calcul_data, calcul_data_product
 from templates.full_mail import build_mail_html
 from src.charts import create_subscription_charts
 
+from datetime import datetime, timedelta
+
 HTML_OUTPUT_DIR = "src/outputs/html"
 PNG_OUTPUT_DIR = "src/outputs/png"
 SQL_DIR = "src/queries"
@@ -28,7 +31,49 @@ os.makedirs(SQL_DIR, exist_ok=True)
 
 
 #variable globale
-today_date =  "19/05/2026";
+report_date =  "26/05/2026";
+
+# -----------------------------
+# manipulation dates
+# -----------------------------
+
+from datetime import datetime, timedelta
+
+def get_same_weekday_last_year(date_obj):
+    iso_year, iso_week, iso_weekday = date_obj.isocalendar()
+    target_year = iso_year - 1
+    first_day = datetime.strptime(f"{target_year}-W{iso_week:02d}-1", "%G-W%V-%u")
+    return first_day + timedelta(days=iso_weekday - 1)
+
+
+def compute_dates(date_str):
+    date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+
+    # ✅ weekday uniquement pour la date de comparaison
+    same_weekday_last_year = get_same_weekday_last_year(date_obj)
+
+    # ✅ bornes calendaires classiques (SANS weekday)
+    same_day_last_month = (date_obj.replace(day=1) - timedelta(days=1)).replace(day=date_obj.day)
+    same_day_last_year = date_obj.replace(year=date_obj.year - 1)
+
+    first_day_month = date_obj.replace(day=1)
+    first_day_month_last_year = first_day_month.replace(year=date_obj.year - 1)
+
+    first_day_year = date_obj.replace(month=1, day=1)
+    first_day_year_last_year = first_day_year.replace(year=date_obj.year - 1)
+
+    return {
+        "report_day": date_obj.strftime("%d/%m/%Y"),
+        "report_day_sql": date_obj.strftime("%Y-%m-%d"),
+        "same_weekday_last_year": same_weekday_last_year.strftime("%d/%m/%Y"),
+        "same_day_last_year": same_day_last_year.strftime("%d/%m/%Y"),
+        "first_day_month": first_day_month.strftime("%d/%m/%Y"),
+        "first_day_month_last_year": first_day_month_last_year.strftime("%d/%m/%Y"),
+        "first_day_year": first_day_year.strftime("%d/%m/%Y"),
+        "first_day_year_last_year": first_day_year_last_year.strftime("%d/%m/%Y"),
+        "first_day_year_last_year_sql": first_day_year_last_year.strftime("%Y-%m-%d"),
+    }
+
 
 # -----------------------------
 # PNG GENERATION
@@ -69,11 +114,24 @@ env = Environment(
 
 
 def generate_period_report(period_name, query_file, product_query_file, report_title, current_date, previous_date):
+    
+    report_date_minus2 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=2)).strftime("%Y-%m-%d")
+
+
     with open(SQL_DIR + "/" + query_file, "r", encoding="utf-8") as f:
-        query = f.read()
+        query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
 
     query_job = client.query(query)
     rows = list(query_job.result())
+
+    rows = list(query_job.result())
+
+    if not rows:
+        raise ValueError(
+            f"Aucune donnée retournée pour {period_name} avec {query_file}"
+        )
+
+
     row = rows[0]
 
     kpis_web, performance_kpis = calcul_data(row)
@@ -89,7 +147,7 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
         kpi["target_percent_clamped"] = min(100, max(0, round(kpi["target_value"] / max_value * 100, 1)))
 
     with open( SQL_DIR + "/" + product_query_file, "r", encoding="utf-8") as f:
-        query = f.read()
+        query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
 
     query_job = client.query(query)
     rows = list(query_job.result())
@@ -105,11 +163,15 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
         product["current_percent_clamped"] = min(100, max(0, round(product["current"] / max_value * 100, 1)))
         product["target_percent_clamped"] = min(100, max(0, round(product["target"] / max_value * 100, 1)))
 
+    ## generation des templates
+    ## KPI Web
     template = env.get_template("kpi_web.html")
     html_content = template.render(**kpis_web,
                                    report_title=report_title,
                                     current_date=current_date,
-                                    previous_date=previous_date)
+                                    previous_date=previous_date,
+                                    report_date=dates['report_day_sql'],
+                                    )
 
     html_file = f"{HTML_OUTPUT_DIR}/{period_name}_kpi_web.html"
     png_file = f"{PNG_OUTPUT_DIR}/{period_name}_kpi_web.png"
@@ -119,11 +181,15 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
 
     html_to_png(html_file, png_file, width=720, height=250)
 
+    ## Performance indicators
     template_perf = env.get_template("performance_indicators.html")
-    html_perf = template_perf.render(performance_kpis=performance_kpis,
+    html_perf = template_perf.render(**kpis_web,
+                                     performance_kpis=performance_kpis,
                                      report_title=report_title,
                                     current_date=current_date,
-                                    previous_date=previous_date)
+                                    previous_date=previous_date,
+                                    report_date=dates['report_day_sql'],
+                                    period_name=period_name)
 
     html_file = f"{HTML_OUTPUT_DIR}/{period_name}_performance_indicators.html"
     png_file = f"{PNG_OUTPUT_DIR}/{period_name}_performance_indicators.png"
@@ -145,11 +211,11 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_top)
 
-    html_to_png(html_file, png_file, width=720, height=700)
+    html_to_png(html_file, png_file, width=720, height=630)
 
 def get_subscription_chart_data():
     with open(os.path.join(SQL_DIR, "charts.sql"), "r", encoding="utf-8") as f:
-        query = f.read()
+        query = f.read().format(report_date=dates['report_day_sql'], start_date=dates['first_day_year_last_year_sql'])
 
     rows = list(client.query(query).result())
 
@@ -185,20 +251,70 @@ def get_subscription_chart_data():
         target_month.append(row.target_total_month or 0)
         target_ytd.append(row.target_total_ytd or 0)
 
+    current_year = datetime.strptime(dates['report_day_sql'], "%Y-%m-%d").year
+
+    months_ytd = []
+    abo_ytd_filtered = []
+    abo_ytd_n1_filtered = []
+    target_ytd_filtered = []
+
+
+    for i, row in enumerate(rows):
+        if row.perf_month.year == current_year:
+            months_ytd.append(months[i])
+            abo_ytd_filtered.append(abo_ytd[i])
+            abo_ytd_n1_filtered.append(abo_ytd_n1[i])
+            target_ytd_filtered.append(target_ytd[i])
+
     return {
-        "months": months,
+        "months": months,  # pour graph 1
         "sliding_year": abo_m,
         "sliding_year_n1": abo_m_n1,
         "objectifs": target_month,
-        "consolidated": abo_ytd,
-        "consolidated_n1": abo_ytd_n1,
-        "consolidated_obj": target_ytd,
-    }
 
-generate_period_report("daily", "query.sql", "query_product.sql", "Jour", today_date, "20/05/2025")
-generate_period_report("mtd", "query_mtd.sql", "query_product_mtd.sql", "Mois à mois", f"01/05/2026 au {today_date}", "01/05/2025 au 20/05/2025")
-generate_period_report("ytd", "query_ytd.sql", "query_product_ytd.sql", "Année à année", f"01/01/2026 au {today_date}", "01/01/2025 au 20/05/2025")
+        # graph 2 filtré
+        "consolidated": abo_ytd_filtered,
+        "consolidated_n1": abo_ytd_n1_filtered,
+        "consolidated_obj": target_ytd_filtered,
 
+        # months aussi filtré pour graph 2
+        "months_ytd": months_ytd,
+}
+
+# -----------------------------
+# Appel des queries
+# -----------------------------
+
+dates = compute_dates(report_date)
+
+generate_period_report(
+    "daily",
+    "query.sql",
+    "query_product.sql",
+    "Jour",
+    dates["report_day"],
+    dates["same_weekday_last_year"]
+)
+
+generate_period_report(
+    "mtd",
+    "query_mtd.sql",
+    "query_product_mtd.sql",
+    "Mois à mois",
+    f"{dates['first_day_month']} au {dates['report_day']}",
+    f"{dates['first_day_month_last_year']} au {dates['same_day_last_year']}"
+)
+
+generate_period_report(
+    "ytd",
+    "query_ytd.sql",
+    "query_product_ytd.sql",
+    "Année à année",
+    f"{dates['first_day_year']} au {dates['report_day']}",
+    f"{dates['first_day_year_last_year']} au {dates['same_day_last_year']}"
+)
+
+## generation des charts d'évolution des abonnements 
 charts_path = os.path.join(PNG_OUTPUT_DIR, "subscription_charts.png")
 chart_data = get_subscription_chart_data()
 create_subscription_charts(
@@ -252,7 +368,7 @@ message["To"] = "guillaume@starfox-analytics.com"
 message.preamble = "This is a multi-part message in MIME format."
 
 html = build_mail_html(
-    today_date=today_date
+    report_date=dates["report_day"]
 )
 
 related.attach(MIMEText(html, "html", "utf-8"))

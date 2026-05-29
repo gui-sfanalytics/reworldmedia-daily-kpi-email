@@ -4,14 +4,14 @@ SELECT
 
   -- KPI j
 p.abo_j,
-p.abo_j7,
-p.evol_abo_jj7,
+p.abo_j_n1,
+p.evol_abo_j_n1,
 p.target_abo_j
 
 
 FROM `reporting.product_mail_daily` AS p
     
-WHERE p.prod_date = '2026-05-10'
+WHERE p.prod_date = "{report_date}"
 
 ORDER BY p.abo_j DESC
 LIMIT 5;

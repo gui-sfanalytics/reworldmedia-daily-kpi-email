@@ -72,6 +72,7 @@ body {
   grid-template-columns: 200px 50px 250px;
   align-items: center;
   margin-bottom: 22px;
+  margin-top: 22px;
 }
 
 .kpi-title {
@@ -237,14 +238,78 @@ body {
   text-align: center;
   z-index: 2;
 }
+
+.kpi-grid {
+  display: flex;
+  justify-content: center; /* centre horizontalement */
+  gap: 40px; /* espace entre les deux cards */
+  margin-bottom: 10px;
+}
+
+.kpi-grid > div {
+  min-width: 220px; /* largeur stable pour chaque bloc */
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+}
+
 </style>
 </head>
 
 <body>
+  {% set is_day_comparison = period_name == "daily" %}
+  {% if is_day_comparison %}
+    <div style="
+          width: 688px;
+          margin: 0 auto 22px auto;
+          background: #000;
+          color: white;
+          text-align: center;
+          padding: 10px 0;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 16px;
+          font-weight: bold;
+        ">
+          ({{report_title}} {{ current_date }} Vs {{ previous_date }})
+    </div>
+  {% endif %}
+
 <div class="report">
 
   <div class="section-title">Indicateurs de Performance</div>
+
   <hr class="divider" />
+
+    {% if is_day_comparison %}
+  <div class="kpi-grid">
+    <div>
+      <div class="kpi-title">Conversions</div>
+      <div class="kpi-content">
+        <div class="delta-box {{ conversions_delta_class }}">{{ conversions_delta }}</div>
+        <div>
+          <div class="current {{ conversions_delta_text_class }}">{{ conversions }}</div>
+          <div class="previous">{{ conversions_previous }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="kpi-title">Taux de conversion</div>
+      <div class="kpi-content">
+        <div class="delta-box {{ conversion_rate_delta_class }}">{{ conversion_rate_delta }}</div>
+        <div>
+          <div class="current {{ conversion_rate_delta_text_class }}">{{ conversion_rate }}</div>
+          <div class="previous">{{ conversion_rate_previous }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+  {% endif %}
 
   {% for kpi in performance_kpis %}
   <div class="kpi-row">

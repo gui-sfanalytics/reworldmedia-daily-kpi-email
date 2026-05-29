@@ -72,6 +72,7 @@ body {
   grid-template-columns: 200px 50px 250px;
   align-items: center;
   margin-bottom: 22px;
+  margin-top: 22px;
 }
 
 .kpi-title {
@@ -237,14 +238,37 @@ body {
   text-align: center;
   z-index: 2;
 }
+
+.kpi-grid {
+  display: flex;
+  justify-content: center; /* centre horizontalement */
+  gap: 40px; /* espace entre les deux cards */
+  margin-bottom: 10px;
+}
+
+.kpi-grid > div {
+  min-width: 220px; /* largeur stable pour chaque bloc */
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+}
+
 </style>
 </head>
 
 <body>
+  
+  
+
 <div class="report">
 
   <div class="section-title">Indicateurs de Performance</div>
+
   <hr class="divider" />
+
+    
 
   
   <div class="kpi-row">
@@ -254,21 +278,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box negative">
-          -15%
+          -17%
         </div>
 
         <div>
           <div class="current negative-text">
-            1 116
+            2 675
           </div>
-          <div class="previous">1 314</div>
+          <div class="previous">3 232</div>
         </div>
       </div>
     </div>
 
     <div class="achievement negative-text">
       <div class="arrow-down"></div>
-      -3%
+      -13%
     </div>
 
 
@@ -277,24 +301,22 @@ body {
       <div
         class="current-value"
         style="
-          left: 89.6%;
-          
-            transform: translateX(-100%);
+          left: 81.0%;
           
         "
       >
-        1 116
+        2 675
       </div>
 
       <div class="slider">
         <div
           class="slider-fill negative"
-          style="width: 89.6%;"
+          style="width: 81.0%;"
         ></div>
 
         <div
           class="current-marker"
-          style="left: 89.6%;"
+          style="left: 81.0%;"
         ></div>
 
         <div
@@ -314,7 +336,7 @@ body {
           
         "
       >
-        Target : 1 153
+        Target : 3 059
       </div>
 
     </div>
@@ -328,21 +350,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box negative">
-          -17%
+          -20%
         </div>
 
         <div>
           <div class="current negative-text">
-            1 035
+            2 472
           </div>
-          <div class="previous">1 247</div>
+          <div class="previous">3 079</div>
         </div>
       </div>
     </div>
 
     <div class="achievement negative-text">
       <div class="arrow-down"></div>
-      -5%
+      -14%
     </div>
 
 
@@ -351,24 +373,22 @@ body {
       <div
         class="current-value"
         style="
-          left: 88.1%;
-          
-            transform: translateX(-100%);
+          left: 79.3%;
           
         "
       >
-        1 035
+        2 472
       </div>
 
       <div class="slider">
         <div
           class="slider-fill negative"
-          style="width: 88.1%;"
+          style="width: 79.3%;"
         ></div>
 
         <div
           class="current-marker"
-          style="left: 88.1%;"
+          style="left: 79.3%;"
         ></div>
 
         <div
@@ -388,7 +408,81 @@ body {
           
         "
       >
-        Target : 1 088
+        Target : 2 886
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Abo Num Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box positive">
+          +33%
+        </div>
+
+        <div>
+          <div class="current positive-text">
+            203
+          </div>
+          <div class="previous">153</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement positive-text">
+      <div class="arrow-up"></div>
+      +17%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 92.6%;
+          
+            transform: translateX(-100%);
+          
+        "
+      >
+        203
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill positive"
+          style="width: 92.6%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 92.6%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 78.9%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Abo Num Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 78.9%;
+          
+        "
+      >
+        Target : 173
       </div>
 
     </div>
@@ -402,21 +496,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box negative">
-          -31%
+          -32%
         </div>
 
         <div>
           <div class="current negative-text">
-            127
+            318
           </div>
-          <div class="previous">183</div>
+          <div class="previous">466</div>
         </div>
       </div>
     </div>
 
     <div class="achievement positive-text">
       <div class="arrow-up"></div>
-      +72%
+      +61%
     </div>
 
 
@@ -431,7 +525,7 @@ body {
           
         "
       >
-        127
+        318
       </div>
 
       <div class="slider">
@@ -447,7 +541,7 @@ body {
 
         <div
           class="target-marker"
-          style="left: 54.0%;"
+          style="left: 57.7%;"
         ></div>
       </div>
 
@@ -458,11 +552,11 @@ body {
       <div
         class="target-label"
         style="
-          left: 54.0%;
+          left: 57.7%;
           
         "
       >
-        Target : 74
+        Target : 198
       </div>
 
     </div>
@@ -476,21 +570,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box negative">
-          -23%
+          -24%
         </div>
 
         <div>
           <div class="current negative-text">
-            1 243
+            2 993
           </div>
-          <div class="previous">1 497</div>
+          <div class="previous">3 698</div>
         </div>
       </div>
     </div>
 
-    <div class="achievement positive-text">
-      <div class="arrow-up"></div>
-      +1%
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -8%
     </div>
 
 
@@ -499,29 +593,29 @@ body {
       <div
         class="current-value"
         style="
-          left: 92.6%;
+          left: 85.1%;
           
             transform: translateX(-100%);
           
         "
       >
-        1 243
+        2 993
       </div>
 
       <div class="slider">
         <div
-          class="slider-fill positive"
-          style="width: 92.6%;"
+          class="slider-fill negative"
+          style="width: 85.1%;"
         ></div>
 
         <div
           class="current-marker"
-          style="left: 92.6%;"
+          style="left: 85.1%;"
         ></div>
 
         <div
           class="target-marker"
-          style="left: 91.4%;"
+          style="left: 92.6%;"
         ></div>
       </div>
 
@@ -532,11 +626,11 @@ body {
       <div
         class="target-label"
         style="
-          left: 91.4%;
+          left: 92.6%;
           
         "
       >
-        Target : 1 227
+        Target : 3 257
       </div>
 
     </div>
@@ -550,21 +644,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box positive">
-          +15%
+          +8%
         </div>
 
         <div>
           <div class="current positive-text">
-            360
+            833
           </div>
-          <div class="previous">314</div>
+          <div class="previous">772</div>
         </div>
       </div>
     </div>
 
     <div class="achievement positive-text">
       <div class="arrow-up"></div>
-      +21%
+      +6%
     </div>
 
 
@@ -579,7 +673,7 @@ body {
           
         "
       >
-        360
+        833
       </div>
 
       <div class="slider">
@@ -595,7 +689,7 @@ body {
 
         <div
           class="target-marker"
-          style="left: 76.4%;"
+          style="left: 87.7%;"
         ></div>
       </div>
 
@@ -606,11 +700,11 @@ body {
       <div
         class="target-label"
         style="
-          left: 76.4%;
+          left: 87.7%;
           
         "
       >
-        Target : 297
+        Target : 789
       </div>
 
     </div>
@@ -624,21 +718,21 @@ body {
 
       <div class="kpi-left-content">
         <div class="delta-box positive">
-          +115%
+          +98%
         </div>
 
         <div>
           <div class="current positive-text">
-            269
+            573
           </div>
-          <div class="previous">125</div>
+          <div class="previous">289</div>
         </div>
       </div>
     </div>
 
     <div class="achievement positive-text">
       <div class="arrow-up"></div>
-      +88%
+      +52%
     </div>
 
 
@@ -653,7 +747,7 @@ body {
           
         "
       >
-        269
+        573
       </div>
 
       <div class="slider">
@@ -669,7 +763,7 @@ body {
 
         <div
           class="target-marker"
-          style="left: 49.2%;"
+          style="left: 61.1%;"
         ></div>
       </div>
 
@@ -680,11 +774,83 @@ body {
       <div
         class="target-label"
         style="
-          left: 49.2%;
+          left: 61.1%;
           
         "
       >
-        Target : 143
+        Target : 378
+      </div>
+
+    </div>
+
+  </div>
+  
+  <div class="kpi-row">
+
+    <div>
+      <div class="kpi-title">Marketplace Vs (N-1)</div>
+
+      <div class="kpi-left-content">
+        <div class="delta-box negative">
+          -42%
+        </div>
+
+        <div>
+          <div class="current negative-text">
+            98
+          </div>
+          <div class="previous">170</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievement negative-text">
+      <div class="arrow-down"></div>
+      -18%
+    </div>
+
+
+    <div class="slider-area">
+
+      <div
+        class="current-value"
+        style="
+          left: 76.3%;
+          
+        "
+      >
+        98
+      </div>
+
+      <div class="slider">
+        <div
+          class="slider-fill negative"
+          style="width: 76.3%;"
+        ></div>
+
+        <div
+          class="current-marker"
+          style="left: 76.3%;"
+        ></div>
+
+        <div
+          class="target-marker"
+          style="left: 92.6%;"
+        ></div>
+      </div>
+
+      <div class="slider-label">
+        Marketplace Vs Budget
+      </div>
+
+      <div
+        class="target-label"
+        style="
+          left: 92.6%;
+          
+        "
+      >
+        Target : 119
       </div>
 
     </div>

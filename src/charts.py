@@ -21,20 +21,39 @@ def create_subscription_charts(
     objectifs,
     consolidated,
     consolidated_n1,
-    consolidated_obj
+    consolidated_obj,
+    months_ytd
 ):
 
-    fig = plt.figure(figsize=(7.6, 7.4), dpi=100)
-    fig.patch.set_facecolor("white")
+    fig = plt.figure(figsize=(7.2, 7.4), dpi=100)
+
+    # fond global (comme le body email)
+    fig.patch.set_facecolor("#f2f2f2")
+
+    # ajout d'une "card"
+    from matplotlib.patches import FancyBboxPatch
+
+    card = FancyBboxPatch(
+        (0.01, 0.02),
+        0.98,
+        0.96,
+        boxstyle="round,pad=0.015,rounding_size=0.03",
+        linewidth=0,
+        facecolor="white",
+        transform=fig.transFigure,
+        zorder=-10
+    )
+    fig.add_artist(card)
+
 
     # -----------------------------
     # CHART 1
     # -----------------------------
-    ax1 = fig.add_axes([0.10, 0.56, 0.82, 0.30])
+    ax1 = fig.add_axes([0.08, 0.60, 0.84, 0.25])
 
     ax1.plot(months, objectifs, color=ORANGE, linewidth=1.4, linestyle=(0, (2, 2)), label="Objectifs")
-    ax1.plot(months, sliding_year_n1, color=GREY, linewidth=1.8, label="Sliding year N-1")
-    ax1.plot(months, sliding_year, color=PURPLE, linewidth=2.2, label="Sliding year")
+    ax1.plot(months, sliding_year_n1, color=GREY, linewidth=1.8, label="Année glissante N-1")
+    ax1.plot(months, sliding_year, color=PURPLE, linewidth=2.2, label="Année glissante")
 
     ax1.set_title("Nombre d'abonnements sur 12 mois glissants", loc="left", fontsize=10, pad=30)
     ax1.axhline(ax1.get_ylim()[1], color="#cfcfcf", linewidth=0.8)
@@ -72,13 +91,13 @@ def create_subscription_charts(
     # -----------------------------
     # CHART 2
     # -----------------------------
-    ax2 = fig.add_axes([0.10, 0.10, 0.82, 0.30])
+    ax2 = fig.add_axes([0.08, 0.18, 0.84, 0.25])
 
-    ax2.plot(months, consolidated_obj, color=ORANGE, linewidth=1.4, linestyle=(0, (2, 2)), label="Objectifs")
-    ax2.plot(months, consolidated_n1, color=GREY, linewidth=1.8, label="Sliding year N-1")
-    ax2.plot(months, consolidated, color=PURPLE, linewidth=2.2, label="Sliding year")
+    ax2.plot(months_ytd, consolidated_obj, color=ORANGE, linewidth=1.4, linestyle=(0, (2, 2)), label="Objectifs")
+    ax2.plot(months_ytd, consolidated_n1, color=GREY, linewidth=1.8, label="Année cumulée N-1")
+    ax2.plot(months_ytd, consolidated, color=PURPLE, linewidth=2.2, label="Année cumulée")
 
-    ax2.set_title("Nombre d'abonnements consolidés", loc="left", fontsize=10, pad=30)
+    ax2.set_title("Nombre d'abonnements cumulés", loc="left", fontsize=10, pad=30)
     ax2.axhline(ax2.get_ylim()[1], color="#cfcfcf", linewidth=0.8)
 
     ax2.grid(axis="y", color=GRID, linestyle=(0, (3, 4)), linewidth=0.7)
@@ -111,5 +130,5 @@ def create_subscription_charts(
     )
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    plt.savefig(output_path, bbox_inches="tight", facecolor="white")
+    plt.savefig(output_path, facecolor=fig.get_facecolor())
     plt.close()

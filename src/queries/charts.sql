@@ -7,6 +7,10 @@ SELECT
     target_total_month,
     target_total_ytd
 FROM reporting.perf_mail_monthly
----WHERE perf_month >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
-WHERE perf_month BETWEEN DATE('2025-06-01') AND DATE('2026-05-01')
-ORDER BY perf_month
+WHERE perf_month BETWEEN 
+  DATE_SUB(
+    DATE_TRUNC(PARSE_DATE('%Y-%m-%d', '{report_date}'), MONTH),
+    INTERVAL 11 MONTH
+  )
+  AND DATE_TRUNC(PARSE_DATE('%Y-%m-%d', '{report_date}'), MONTH)
+ORDER BY perf_month 

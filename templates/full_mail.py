@@ -1,4 +1,4 @@
-def build_mail_html(today_date):
+def build_mail_html(report_date):
     html = f"""
         <!DOCTYPE html>
         <html>
@@ -31,41 +31,30 @@ def build_mail_html(today_date):
             padding:0 0 28px 0;
         ">
         Bonjour,<br>
-        voici votre rapport du <strong>{today_date}</strong> pour Reworld Media.
+        voici votre rapport du <strong>{report_date}</strong> pour Reworld Media.
         </td>
         </tr>
 
-        <tr><td><img src="cid:daily_web" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
-
         <tr><td><img src="cid:daily_performance" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
 
         <tr><td><img src="cid:daily_top_subscriptions" width="760" style="display:block; border:0;"></td></tr>
         <tr><td height="24">&nbsp;</td></tr>
 
         <tr><td><img src="cid:mtd_web" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
 
         <tr><td><img src="cid:mtd_performance" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
-
         <tr><td><img src="cid:mtd_top_subscriptions" width="760" style="display:block; border:0;"></td></tr>
         <tr><td height="24">&nbsp;</td></tr>
 
         <tr><td><img src="cid:ytd_web" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
 
-        <tr><td><img src="cid:ytd_performance" width="760" style="display:block; border:0;"></td></tr>
-        <tr><td height="24">&nbsp;</td></tr>
+        <tr><td><img src="cid:ytd_performance" width="760" style="display:block; border:0;"></td></tr
 
         <tr><td><img src="cid:ytd_top_subscriptions" width="760" style="display:block; border:0;"></td></tr>
 
-        <tr><td height="24">&nbsp;</td></tr>
-
         <tr>
         <td>
-            <img src="cid:subscription_charts" width="760" style="display:block; border:0;">
+            <img src="cid:subscription_charts" style="display:block; margin:0 auto; width:720px;" />
         </td>
         </tr>
 
