@@ -12,7 +12,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
-from google.cloud import bigquery, storage
+from google.cloud import bigquery
+from google.cloud import storage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -166,14 +167,11 @@ def main_process():
     def generate_period_report(period_name, query_file, product_query_file, report_title, current_date, previous_date):
         
         report_date_minus2 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=2)).strftime("%Y-%m-%d")
-
-
+        
         with open(SQL_DIR + "/" + query_file, "r", encoding="utf-8") as f:
             query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
 
         query_job = client.query(query)
-        rows = list(query_job.result())
-
         rows = list(query_job.result())
 
         if not rows:
@@ -198,7 +196,7 @@ def main_process():
 
         with open( SQL_DIR + "/" + product_query_file, "r", encoding="utf-8") as f:
             query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
-
+            
         query_job = client.query(query)
         rows = list(query_job.result())
         top_subscriptions = calcul_data_product(rows)
