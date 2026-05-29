@@ -127,22 +127,10 @@ def main_process():
 
         blob.upload_from_filename(local_path)
 
-        credentials, _ = default()
-        request = Request()
-        credentials.refresh(request)
-
-        signer = Signer(
-            request,
-            credentials,
-            credentials.service_account_email
-        )
-
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(days=7),
-            method="GET",
-            credentials=credentials,
-            signer=signer
+            method="GET"
         )
 
         return url
