@@ -1,3 +1,7 @@
+import sys
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 import os
 
 from jinja2 import Environment, FileSystemLoader
@@ -29,6 +33,9 @@ from templates.full_mail import build_mail_html
 from src.charts import create_subscription_charts
 
 from datetime import datetime, timedelta
+
+import traceback
+from flask import jsonify
 
 ENV = os.getenv("ENV", "local") 
 HTML_OUTPUT_DIR = "src/outputs/html"
@@ -548,6 +555,12 @@ def run():
         print("ERROR:", e)
         print(traceback.format_exc())
         return "ERROR", 500
+    
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("=== EXCEPTION ===")
+    traceback.print_exc()
+    return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080, debug=True)
