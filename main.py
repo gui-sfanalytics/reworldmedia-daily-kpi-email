@@ -55,11 +55,8 @@ def main_process():
     def compute_dates(date_str):
         date_obj = datetime.strptime(date_str, "%d/%m/%Y")
 
-        # ✅ weekday uniquement pour la date de comparaison
         same_weekday_last_year = get_same_weekday_last_year(date_obj)
 
-        # ✅ bornes calendaires classiques (SANS weekday)
-        same_day_last_month = (date_obj.replace(day=1) - timedelta(days=1)).replace(day=date_obj.day)
         same_day_last_year = date_obj.replace(year=date_obj.year - 1)
 
         first_day_month = date_obj.replace(day=1)
@@ -130,7 +127,7 @@ def main_process():
         #url signés
         url = blob.generate_signed_url(
             version="v4",
-            expiration=timedelta(days=30),
+            expiration=timedelta(days=7),
             method="GET"
         )
 
@@ -389,6 +386,31 @@ def main_process():
     # setup email
     # -----------------------------
 
+    def get_recipients():
+        client = bigquery.Client()
+
+        query = """
+        SELECT email, type
+        FROM `reporting.email_recipients`
+        WHERE actif = TRUE
+        """
+
+        rows = client.query(query).result()
+
+        to_list = []
+        cc_list = []
+        bcc_list = []
+
+        for row in rows:
+            if row.type == "to":
+                to_list.append(row.email)
+            elif row.type == "cc":
+                cc_list.append(row.email)
+            elif row.type == "bcc":
+                bcc_list.append(row.email)
+
+        return to_list, cc_list, bcc_list
+
     def send_email_n8n(html, image_urls):
         url = "https://app.starfox-analytics.com/webhook/gmail-send-html"
 
@@ -397,8 +419,12 @@ def main_process():
             if value:
                 html += f'<br><img src="{value}" width="700">'
 
+        to_list, cc_list, bcc_list = get_recipients()
+
         payload = {
-            "to": "guillaume@starfox-analytics.com",
+            "to": to_list,
+            "cc": cc_list,
+            "bcc": bcc_list,
             "subject": "Daily KPI Report",
             "html": html
         }
