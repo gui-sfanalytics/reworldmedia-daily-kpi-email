@@ -382,65 +382,40 @@ def main_process():
     # setup email
     # -----------------------------
 
-    SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-
-    creds = None
-
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file(
-            "token.json",
-            SCOPES
-        )
-
-    if not creds or not creds.valid:
-
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json",
-                SCOPES
-            )
-
-            creds = flow.run_local_server(port=0)
-
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-
-    service = build("gmail", "v1", credentials=creds)
-
-    def send_email_n8n(html, image_urls):
-        url = "https://app.starfox-analytics.com/webhook/gmail-send-html"
-
-        # inject images dynamiques
-        for key, value in image_urls.items():
-            if value:
-                html += f'<br><img src="{value}" width="700">'
-
-        payload = {
-            "to": "guillaume@starfox-analytics.com",
-            "subject": "Daily KPI Report",
-            "html": html
-        }
-
-        response = requests.post(url, json=payload)
-
-        print("n8n:", response.status_code, response.text)
-
-        if response.status_code >= 300:
-            raise Exception("Email failed via n8n")
-
-    # -----------------------------
-    # EMAIL
-    # -----------------------------
-
     html = build_mail_html(
         report_date=dates["report_day"]
     )
 
     if ENV == "local":
         print("Mode LOCAL → Gmail API")
+
+        SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+
+        creds = None
+
+        if os.path.exists("token.json"):
+            creds = Credentials.from_authorized_user_file(
+                "token.json",
+                SCOPES
+            )
+
+        if not creds or not creds.valid:
+
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    "credentials.json",
+                    SCOPES
+                )
+
+                creds = flow.run_local_server(port=0)
+
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
+
+        service = build("gmail", "v1", credentials=creds)
 
         message = MIMEMultipart("mixed")
         related = MIMEMultipart("related")
@@ -485,6 +460,7 @@ def main_process():
         print("Mode GCP → n8n")
 
         send_email_n8n(html, image_urls)
+
 
     # -----------------------------
     # Setup de l'app
