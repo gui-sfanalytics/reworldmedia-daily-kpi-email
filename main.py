@@ -3,7 +3,8 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from matplotlib import dates
 from playwright.sync_api import sync_playwright
-from google.cloud import bigquery
+from google.cloud import bigquery, storage
+from flask import Flask
 
 import base64
 
@@ -31,7 +32,8 @@ os.makedirs(SQL_DIR, exist_ok=True)
 
 
 #variable globale
-report_date =  "26/05/2026";
+#report_date =  "26/05/2026";
+report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
 
 # -----------------------------
 # manipulation dates
@@ -106,6 +108,17 @@ def html_to_png(html_path, png_path, width=640, height=520):
 # BIGQUERY
 # -----------------------------
 
+run_date_folder = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+
+def upload_to_gcs(local_path, bucket_name, destination_blob_name):
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(local_path)
+
+    print(f"Uploaded {local_path} to gs://{bucket_name}/{destination_blob_name}")
+
 client = bigquery.Client()
 
 env = Environment(
@@ -176,6 +189,12 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
     html_file = f"{HTML_OUTPUT_DIR}/{period_name}_kpi_web.html"
     png_file = f"{PNG_OUTPUT_DIR}/{period_name}_kpi_web.png"
 
+    upload_to_gcs(
+        png_file,
+        "kpi-email-storage",  # nom du bucket
+        f"{run_date_folder}/{os.path.basename(png_file)}"
+    )
+
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_content)
 
@@ -194,6 +213,12 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
     html_file = f"{HTML_OUTPUT_DIR}/{period_name}_performance_indicators.html"
     png_file = f"{PNG_OUTPUT_DIR}/{period_name}_performance_indicators.png"
 
+    upload_to_gcs(
+        png_file,
+        "kpi-email-storage",  # nom du bucket
+        f"{run_date_folder}/{os.path.basename(png_file)}"
+    )
+
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_perf)
 
@@ -207,6 +232,12 @@ def generate_period_report(period_name, query_file, product_query_file, report_t
 
     html_file = f"{HTML_OUTPUT_DIR}/{period_name}_top_subscriptions.html"
     png_file = f"{PNG_OUTPUT_DIR}/{period_name}_top_subscriptions.png"
+
+    upload_to_gcs(
+        png_file,
+        "kpi-email-storage",  # nom du bucket
+        f"{run_date_folder}/{os.path.basename(png_file)}"
+    )
 
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_top)
@@ -405,3 +436,13 @@ service.users().messages().send(
 ).execute()
 
 print("Email sent")
+
+app = Flask(__name__)
+
+@app.route("/")
+def run():
+    # appelle ton code principal ici
+    return "OK"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
