@@ -422,9 +422,9 @@ def main_process():
         to_list, cc_list, bcc_list = get_recipients()
 
         payload = {
-            "to": to_list,
-            "cc": cc_list,
-            "bcc": bcc_list,
+            "to": ",".join(to_list),
+            "cc": ",".join(cc_list),
+            "bcc": ",".join(bcc_list),
             "subject": "Daily KPI Report",
             "html": html
         }
