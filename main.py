@@ -435,13 +435,8 @@ def main_process():
 
         return to_list, cc_list, bcc_list
 
-    def send_email_n8n(html, image_urls):
+    def send_email_n8n(html):
         url = "https://app.starfox-analytics.com/webhook/gmail-send-html"
-
-        # inject images dynamiques
-        for key, value in image_urls.items():
-            if value:
-                html += f'<br><img src="{value}" width="700">'
 
         to_list, cc_list, bcc_list = get_recipients()
 
@@ -460,9 +455,17 @@ def main_process():
         if response.status_code >= 300:
             raise Exception("Email failed via n8n")
 
-    html = build_mail_html(
-        report_date=dates["report_day"]
+
+    if ENV == "local":
+            html = build_mail_html(
+                report_date=dates["report_day"]
+            )
+    else:
+        html = build_mail_html(
+            report_date=dates["report_day"],
+            image_sources=image_urls
     )
+
 
     if ENV == "local":
         print("Mode LOCAL → Gmail API")
@@ -537,7 +540,7 @@ def main_process():
     else:
         print("Mode GCP → n8n")
 
-        send_email_n8n(html, image_urls)
+        send_email_n8n(html)
 
 
     # -----------------------------
