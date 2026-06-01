@@ -57,7 +57,6 @@ report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
 # manipulation dates
 # -----------------------------
 
-
 def get_same_weekday_last_year(date_obj):
     iso_year, iso_week, iso_weekday = date_obj.isocalendar()
     target_year = iso_year - 1
@@ -93,7 +92,6 @@ def main_process():
             "first_day_year_last_year_sql": first_day_year_last_year.strftime("%Y-%m-%d"),
         }
 
-
     # -----------------------------
     # PNG GENERATION
     # -----------------------------
@@ -126,13 +124,11 @@ def main_process():
 
             print("PNG generated : " + png_path)
 
-
     # -----------------------------
     # BIGQUERY
     # -----------------------------
 
     run_date_folder = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
-
 
     def upload_to_gcs(local_file_path, bucket_name, destination_blob_name):
         storage_client = storage.Client()
@@ -160,6 +156,29 @@ def main_process():
 
         return url
 
+    # -----------------------------
+    # Génère une signed URL pour un blob GCS déjà existant (sans re-upload)
+    # -----------------------------
+
+    def get_gcs_signed_url(bucket_name, blob_name):
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+
+        credentials, project_id = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        credentials.refresh(Request())
+
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(days=7),
+            method="GET",
+            service_account_email=credentials.service_account_email,
+            access_token=credentials.token,
+        )
+        return url
+
     print("STEP 2")
     client = bigquery.Client()
     print("STEP 3")
@@ -172,11 +191,10 @@ def main_process():
     # Appel des queries
     # -----------------------------
 
-
     def generate_period_report(period_name, query_file, product_query_file, report_title, current_date, previous_date):
-        
+
         report_date_minus2 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=2)).strftime("%Y-%m-%d")
-        
+
         with open(SQL_DIR + "/" + query_file, "r", encoding="utf-8") as f:
             query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
 
@@ -187,7 +205,6 @@ def main_process():
             raise ValueError(
                 f"Aucune donnée retournée pour {period_name} avec {query_file}"
             )
-
 
         row = rows[0]
 
@@ -205,7 +222,7 @@ def main_process():
 
         with open( SQL_DIR + "/" + product_query_file, "r", encoding="utf-8") as f:
             query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
-            
+
         query_job = client.query(query)
         rows = list(query_job.result())
         top_subscriptions = calcul_data_product(rows)
@@ -240,7 +257,7 @@ def main_process():
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",  # nom du bucket
+            "kpi-email-storage",
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_kpi_web"] = png_url
@@ -265,7 +282,7 @@ def main_process():
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",  # nom du bucket
+            "kpi-email-storage",
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_performance_indicators"] = png_url
@@ -286,7 +303,7 @@ def main_process():
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",  # nom du bucket
+            "kpi-email-storage",
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_top_subscriptions"] = png_url
@@ -336,7 +353,6 @@ def main_process():
         abo_ytd_n1_filtered = []
         target_ytd_filtered = []
 
-
         for i, row in enumerate(rows):
             if row.perf_month.year == current_year:
                 months_ytd.append(months[i])
@@ -345,22 +361,23 @@ def main_process():
                 target_ytd_filtered.append(target_ytd[i])
 
         return {
-            "months": months,  # pour graph 1
+            "months": months,
             "sliding_year": abo_m,
             "sliding_year_n1": abo_m_n1,
             "objectifs": target_month,
-
-            # graph 2 filtré
             "consolidated": abo_ytd_filtered,
             "consolidated_n1": abo_ytd_n1_filtered,
             "consolidated_obj": target_ytd_filtered,
-
-            # months aussi filtré pour graph 2
             "months_ytd": months_ytd,
-    }
+        }
 
     dates = compute_dates(report_date)
     image_urls = {}
+
+    # ── Détection du 2 du mois ────────────────────────────────────────────────
+    date_obj = datetime.strptime(report_date, "%d/%m/%Y")
+    is_month_recap = (date_obj.day == 2)
+    mtd_folder = (date_obj - timedelta(days=1)).strftime("%Y-%m-%d") if is_month_recap else run_date_folder
 
     generate_period_report(
         "daily",
@@ -389,6 +406,19 @@ def main_process():
         f"{dates['first_day_year_last_year']} au {dates['same_day_last_year']}"
     )
 
+    # ── Remplacement des URLs MTD si on est le 2 du mois ─────────────────────
+    # Les PNG du mois complet précédent sont dans le dossier de la veille (= dernier jour du mois)
+    if is_month_recap:
+        print(f"[MONTH RECAP] Remplacement des URLs MTD → dossier {mtd_folder}")
+        mtd_keys = ["mtd_kpi_web", "mtd_performance_indicators", "mtd_top_subscriptions"]
+        for key in mtd_keys:
+            blob_name = f"{mtd_folder}/{key}.png"
+            try:
+                image_urls[key] = get_gcs_signed_url("kpi-email-storage", blob_name)
+                print(f"  ✓ {key} → gs://kpi-email-storage/{blob_name}")
+            except Exception as e:
+                print(f"  ⚠️ Impossible de récupérer {blob_name} : {e} — URL du jour conservée")
+
     ## generation des charts d'évolution des abonnements 
     charts_path = os.path.join(PNG_OUTPUT_DIR, "subscription_charts.png")
     chart_data = get_subscription_chart_data()
@@ -404,7 +434,6 @@ def main_process():
     )
 
     image_urls["subscription_charts"] = chart_url
-
 
     # -----------------------------
     # setup email
@@ -455,17 +484,15 @@ def main_process():
         if response.status_code >= 300:
             raise Exception("Email failed via n8n")
 
-
     if ENV == "local":
-            html = build_mail_html(
-                report_date=dates["report_day"]
-            )
+        html = build_mail_html(
+            report_date=dates["report_day"]
+        )
     else:
         html = build_mail_html(
             report_date=dates["report_day"],
             image_sources=image_urls
-    )
-
+        )
 
     if ENV == "local":
         print("Mode LOCAL → Gmail API")
@@ -539,13 +566,11 @@ def main_process():
 
     else:
         print("Mode GCP → n8n")
-
         send_email_n8n(html)
 
-
-    # -----------------------------
-    # Setup de l'app
-    # -----------------------------
+# -----------------------------
+# Setup de l'app
+# -----------------------------
 
 app = Flask(__name__)
 
@@ -561,9 +586,7 @@ def healthcheck():
 def run_job():
     try:
         print("Process started")
-
         main_process()
-
         print("Process finished")
         return "Job executed successfully", 200
 
@@ -580,7 +603,6 @@ def favicon():
 def handle_exception(e):
     if isinstance(e, HTTPException):
         return e
-
     traceback.print_exc()
     return f"<pre>{traceback.format_exc()}</pre>", 500
 
