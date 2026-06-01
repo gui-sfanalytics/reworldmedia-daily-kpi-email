@@ -112,7 +112,7 @@ def calcul_data(db_value):
             "current": thousand_separator(db_value["abo_j"] + db_value["reabo_j"]),
             "current_value": db_value["abo_j"] + db_value["reabo_j"],
             "previous": thousand_separator(str(int(db_value["abo_j_n1"] + db_value["reabo_j_n1"]))),
-            "delta_percent": db_value["evol_abo_j_n1"] if db_value["evol_abo_j_n1"] == db_value["evol_reabo_j_n1"] else (db_value["evol_abo_j_n1"] + db_value["evol_reabo_j_n1"]) / 2,
+            "delta_percent": (db_value["abo_j"] + db_value["reabo_j"] - (db_value["abo_j_n1"] + db_value["reabo_j_n1"])) / (db_value["abo_j_n1"] + db_value["reabo_j_n1"])*100,
             "target": thousand_separator(db_value["target_abo_j"] + db_value["target_reabo_j"]),
             "target_value": db_value["target_abo_j"] + db_value["target_reabo_j"],
             "budget_label": "Abo+Reabo Vs Budget",
