@@ -68,4 +68,4 @@ FROM `reporting.ga4_mail_daily` AS g
 LEFT JOIN `reporting.perf_mail_daily` AS p
   ON p.perf_date = DATE_ADD(g.ga4_date, INTERVAL 1 DAY)
 
-WHERE g.ga4_date = "{report_date_minus2}"
+WHERE g.ga4_date = "{report_date_minus1}"

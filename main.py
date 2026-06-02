@@ -188,10 +188,10 @@ def main_process(report_date):
 
     def generate_period_report(period_name, query_file, product_query_file, report_title, current_date, previous_date):
 
-        report_date_minus2 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=2)).strftime("%Y-%m-%d")
+        report_date_minus1 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=1)).strftime("%Y-%m-%d")
 
         with open(SQL_DIR + "/" + query_file, "r", encoding="utf-8") as f:
-            query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
+            query = f.read().format(report_date=dates['report_day_sql'], report_date_minus1=report_date_minus1)
 
         query_job = client.query(query)
         rows = list(query_job.result())
@@ -216,7 +216,7 @@ def main_process(report_date):
             kpi["target_percent_clamped"] = min(100, max(0, round(kpi["target_value"] / max_value * 100, 1)))
 
         with open( SQL_DIR + "/" + product_query_file, "r", encoding="utf-8") as f:
-            query = f.read().format(report_date=dates['report_day_sql'], report_date_minus2=report_date_minus2)
+            query = f.read().format(report_date=dates['report_day_sql'])
 
         query_job = client.query(query)
         rows = list(query_job.result())
@@ -371,7 +371,7 @@ def main_process(report_date):
 
     # ── Détection du 2 du mois ────────────────────────────────────────────────
     date_obj = datetime.strptime(report_date, "%d/%m/%Y")
-    is_month_recap = (date_obj.day == 2)
+    is_month_recap = (date_obj.day == 1)
     mtd_folder = (date_obj - timedelta(days=1)).strftime("%Y-%m-%d") if is_month_recap else run_date_folder
 
     generate_period_report(
@@ -590,7 +590,7 @@ def run_job():
             except ValueError:
                 return "Format de date invalide. Utilisez DD/MM/YYYY (ex: 31/05/2026)", 400
         else:
-            report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+            report_date = datetime.now().strftime("%d/%m/%Y")
             print(f"[AUTO] report_date = {report_date}")
 
         print("Process started")
