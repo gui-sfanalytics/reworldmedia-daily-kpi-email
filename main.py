@@ -174,9 +174,7 @@ def main_process(report_date):
         )
         return url
 
-    print("STEP 2")
     client = bigquery.Client()
-    print("STEP 3")
 
     env = Environment(
         loader=FileSystemLoader("templates")
@@ -405,7 +403,7 @@ def main_process(report_date):
     # Les PNG du mois complet précédent sont dans le dossier de la veille (= dernier jour du mois)
     if is_month_recap:
         print(f"[MONTH RECAP] Remplacement des URLs MTD → dossier {mtd_folder}")
-        mtd_keys = ["mtd_kpi_web", "mtd_performance_indicators", "mtd_top_subscriptions"]
+        mtd_keys = ["mtd_kpi_web"]
         for key in mtd_keys:
             blob_name = f"{mtd_folder}/{key}.png"
             try:
