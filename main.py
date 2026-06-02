@@ -62,10 +62,6 @@ def get_same_weekday_last_year(date_obj):
 def main_process(report_date):
     print(f"Process started for {report_date}")
 
-    report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
-
-    print("Process started")
-
     def compute_dates(date_str):
         date_obj = datetime.strptime(date_str, "%d/%m/%Y")
 
