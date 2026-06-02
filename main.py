@@ -49,10 +49,6 @@ os.makedirs(SQL_DIR, exist_ok=True)
 
 print("STORAGE VERSION:", google.cloud.storage.__version__)
 
-#variable globale
-#report_date =  "26/05/2026";
-report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
-
 # -----------------------------
 # manipulation dates
 # -----------------------------
@@ -63,7 +59,10 @@ def get_same_weekday_last_year(date_obj):
     first_day = datetime.strptime(f"{target_year}-W{iso_week:02d}-1", "%G-W%V-%u")
     return first_day + timedelta(days=iso_weekday - 1)
 
-def main_process():
+def main_process(report_date):
+    print(f"Process started for {report_date}")
+
+    report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
 
     print("Process started")
 
@@ -585,10 +584,23 @@ def healthcheck():
 @app.route("/run", methods=["GET", "POST"])
 def run_job():
     try:
+        custom_date = request.args.get("date")
+        
+        if custom_date:
+            try:
+                datetime.strptime(custom_date, "%d/%m/%Y")
+                report_date = custom_date
+                print(f"[MANUAL] report_date = {report_date}")
+            except ValueError:
+                return "Format de date invalide. Utilisez DD/MM/YYYY (ex: 31/05/2026)", 400
+        else:
+            report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+            print(f"[AUTO] report_date = {report_date}")
+
         print("Process started")
-        main_process()
+        main_process(report_date)
         print("Process finished")
-        return "Job executed successfully", 200
+        return f"Job executed successfully for {report_date}", 200
 
     except Exception:
         print("=== ERREUR PYTHON ===")
