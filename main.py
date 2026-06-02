@@ -127,35 +127,39 @@ def main_process(report_date):
 
     def upload_to_gcs(local_file_path, bucket_name, destination_blob_name):
         storage_client = storage.Client()
-
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
-
         blob.upload_from_filename(local_file_path)
 
-        credentials, project_id = google.auth.default(
-            scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
+        if ENV == "local":
+            print(f"  [LOCAL] Upload OK → gs://{bucket_name}/{destination_blob_name} (pas de signed URL)")
+            return f"gs://{bucket_name}/{destination_blob_name}"  # non utilisée en local (cid: utilisés)
 
-        credentials.refresh(Request())
+        else:
+            # En GCP : service account → signed URL
+            credentials, project_id = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            credentials.refresh(Request())
 
-        service_account_email = credentials.service_account_email
-
-        url = blob.generate_signed_url(
-            version="v4",
-            expiration=timedelta(days=7),
-            method="GET",
-            service_account_email=service_account_email,
-            access_token=credentials.token,
-        )
-
-        return url
+            url = blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(days=7),
+                method="GET",
+                service_account_email=credentials.service_account_email,
+                access_token=credentials.token,
+            )
+            return url
 
     # -----------------------------
     # Génère une signed URL pour un blob GCS déjà existant (sans re-upload)
     # -----------------------------
 
     def get_gcs_signed_url(bucket_name, blob_name):
+        if ENV == "local":
+            # Non appelée en local normalement, mais sécurité
+            return f"gs://{bucket_name}/{blob_name}"
+
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
@@ -400,17 +404,32 @@ def main_process(report_date):
     )
 
     # ── Remplacement des URLs MTD si on est le 2 du mois ─────────────────────
-    # Les PNG du mois complet précédent sont dans le dossier de la veille (= dernier jour du mois)
     if is_month_recap:
         print(f"[MONTH RECAP] Remplacement des URLs MTD → dossier {mtd_folder}")
         mtd_keys = ["mtd_kpi_web"]
-        for key in mtd_keys:
-            blob_name = f"{mtd_folder}/{key}.png"
-            try:
-                image_urls[key] = get_gcs_signed_url("kpi-email-storage", blob_name)
-                print(f"  ✓ {key} → gs://kpi-email-storage/{blob_name}")
-            except Exception as e:
-                print(f"  ⚠️ Impossible de récupérer {blob_name} : {e} — URL du jour conservée")
+
+        if ENV == "local":
+            # En local : télécharger le PNG de la veille depuis GCS
+            storage_client = storage.Client()
+            for key in mtd_keys:
+                blob_name = f"{mtd_folder}/{key}.png"
+                local_path = f"{PNG_OUTPUT_DIR}/{key}.png"
+                try:
+                    bucket = storage_client.bucket("kpi-email-storage")
+                    blob = bucket.blob(blob_name)
+                    blob.download_to_filename(local_path)
+                    print(f"  ✓ {key} téléchargé depuis gs://kpi-email-storage/{blob_name} → {local_path}")
+                except Exception as e:
+                    print(f"  ⚠️ Impossible de télécharger {blob_name} : {e} — PNG du jour conservé")
+        else:
+            # En GCP : remplacer par signed URL
+            for key in mtd_keys:
+                blob_name = f"{mtd_folder}/{key}.png"
+                try:
+                    image_urls[key] = get_gcs_signed_url("kpi-email-storage", blob_name)
+                    print(f"  ✓ {key} → gs://kpi-email-storage/{blob_name}")
+                except Exception as e:
+                    print(f"  ⚠️ Impossible de récupérer {blob_name} : {e} — URL du jour conservée")
 
     ## generation des charts d'évolution des abonnements 
     charts_path = os.path.join(PNG_OUTPUT_DIR, "subscription_charts.png")
@@ -466,7 +485,7 @@ def main_process(report_date):
             "to": ",".join(to_list),
             "cc": ",".join(cc_list),
             "bcc": ",".join(bcc_list),
-            "subject": "Daily KPI Report",
+            "subject": "Reporting Quotidien ReworldMedia",
             "html": html
         }
 
@@ -524,7 +543,7 @@ def main_process(report_date):
         related = MIMEMultipart("related")
         message.attach(related)
 
-        message["Subject"] = "Daily KPI Report"
+        message["Subject"] = "Reporting Quotidien ReworldMedia"
         message["From"] = "guillaume@starfox-analytics.com"
         message["To"] = "guillaume@starfox-analytics.com"
 
@@ -615,4 +634,4 @@ def handle_exception(e):
     return f"<pre>{traceback.format_exc()}</pre>", 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=False)
