@@ -479,12 +479,14 @@ def main_process(report_date):
 
     if ENV == "local":
         html = build_mail_html(
-            report_date=dates["report_day"]
+            report_date=dates["report_day"],
+             is_month_recap=is_month_recap 
         )
     else:
         html = build_mail_html(
             report_date=dates["report_day"],
-            image_sources=image_urls
+            image_sources=image_urls,
+            is_month_recap=is_month_recap 
         )
 
     if ENV == "local":
