@@ -590,8 +590,8 @@ def run_job():
             except ValueError:
                 return "Format de date invalide. Utilisez DD/MM/YYYY (ex: 31/05/2026)", 400
         else:
-            report_date = datetime.now().strftime("%d/%m/%Y")
-            print(f"[AUTO] report_date = {report_date}")
+            report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+            print(f"[AUTO] report_date = {report_date}") 
 
         print("Process started")
         main_process(report_date)

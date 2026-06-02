@@ -45,7 +45,7 @@ def build_mail_html(report_date, image_sources=None):
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Daily KPI Report</title>
+  <title>Reporting Quotidien ReworldMedia</title>
 </head>
 
 <body bgcolor="#f2f2f2" style="margin:0; padding:0; background-color:#f2f2f2;">
