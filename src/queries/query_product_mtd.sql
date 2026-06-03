@@ -13,5 +13,5 @@ FROM `reporting.product_mail_daily` AS p
     
 WHERE p.prod_date = "{report_date}"
 
-ORDER BY p.abo_j DESC
+ORDER BY p.abo_m1 DESC
 LIMIT 5;
