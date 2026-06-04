@@ -211,7 +211,7 @@ def main_process(report_date):
             achievement = ((kpi["current_value"] / kpi["target_value"]) - 1) * 100 if kpi["target_value"] else 0
             kpi["achievement_percent"] = achievement
             kpi["achievement_display"] = f"{achievement:+.0f}%"
-            kpi["delta_display"] = f"{kpi['delta_percent']:+.0f}%"
+            kpi["delta_display"] = f"{kpi['delta_percent']:+.1f}%"
 
             max_value = max(kpi["current_value"], kpi["target_value"]) * 1.08 if max(kpi["current_value"], kpi["target_value"]) else 1
             kpi["current_percent_clamped"] = min(100, max(0, round(kpi["current_value"] / max_value * 100, 1)))

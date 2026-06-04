@@ -17,9 +17,9 @@ SELECT
   g.evol_session_purchase_jj7,
 
   -- kpi de conversion
-  g.conversions_j,
-  g.conversions_j7,
-  g.evol_conversions_jj7,
+  g_plus1.conversions_j,
+  g_plus1.conversions_j7,
+  g_plus1.evol_conversions_jj7,
 
   -- kpi de perf abonnement total
   p.abo_j,
@@ -65,6 +65,9 @@ SELECT
 
 
 FROM `reporting.ga4_mail_daily` AS g
+
+LEFT JOIN `reporting.ga4_mail_daily` AS g_plus1
+  ON g_plus1.ga4_date = DATE_ADD(g.ga4_date, INTERVAL 1 DAY)
 
 LEFT JOIN `reporting.perf_mail_daily` AS p
   ON p.perf_date = DATE_ADD(g.ga4_date, INTERVAL 1 DAY)
