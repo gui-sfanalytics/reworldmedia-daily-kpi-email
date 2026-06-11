@@ -43,6 +43,8 @@ ENV = os.getenv("ENV", "local")
 HTML_OUTPUT_DIR = "src/outputs/html"
 PNG_OUTPUT_DIR = "src/outputs/png"
 SQL_DIR = "src/queries"
+DASHBOARD_URL = "https://datastudio.google.com/reporting/e9d439db-932f-4ffe-b67e-decee9e8e30e"
+
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
 os.makedirs(SQL_DIR, exist_ok=True)
@@ -499,13 +501,15 @@ def main_process(report_date):
     if ENV == "local":
         html = build_mail_html(
             report_date=dates["report_day"],
-             is_month_recap=is_month_recap 
+             is_month_recap=is_month_recap,
+             dashboard_url=DASHBOARD_URL
         )
     else:
         html = build_mail_html(
             report_date=dates["report_day"],
             image_sources=image_urls,
-            is_month_recap=is_month_recap 
+            is_month_recap=is_month_recap,
+            dashboard_url=DASHBOARD_URL
         )
 
     if ENV == "local":

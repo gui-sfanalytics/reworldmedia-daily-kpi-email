@@ -1,4 +1,4 @@
-def build_mail_html(report_date, image_sources=None, is_month_recap=False):
+def build_mail_html(report_date, image_sources=None, is_month_recap=False, dashboard_url=None):
     """
     image_sources permet d'utiliser :
     - en local : des cid Gmail
@@ -26,17 +26,32 @@ def build_mail_html(report_date, image_sources=None, is_month_recap=False):
 
     img = default_sources
 
-    def image_row(src, width=760, padding_bottom=0):
-        return f"""
-        <tr>
-          <td align="center" bgcolor="#f2f2f2" style="padding:0 0 {padding_bottom}px 0; background-color:#f2f2f2;">
+    def image_row(src, width=760, padding_bottom=0, href=None):
+        if href:
+            img_tag = f"""
+            <a href="{href}" target="_blank">
+              <img
+                src="{src}"
+                width="{width}"
+                style="display:block; width:{width}px; max-width:{width}px; height:auto; margin:0 auto; border:0; outline:none; text-decoration:none;"
+                border="0"
+                alt=""
+              />
+            </a>"""
+        else:
+            img_tag = f"""
             <img
               src="{src}"
               width="{width}"
               style="display:block; width:{width}px; max-width:{width}px; height:auto; margin:0 auto; border:0; outline:none; text-decoration:none;"
               border="0"
               alt=""
-            />
+            />"""
+
+        return f"""
+        <tr>
+          <td align="center" bgcolor="#f2f2f2" style="padding:0 0 {padding_bottom}px 0; background-color:#f2f2f2;">
+            {img_tag}
           </td>
         </tr>
         """
@@ -99,16 +114,16 @@ def build_mail_html(report_date, image_sources=None, is_month_recap=False):
                 </tr>
 
                 {image_row(img["daily_performance_indicators"])}
-                {image_row(img["daily_top_subscriptions"], padding_bottom=24)}
+                {image_row(img["daily_top_subscriptions"], padding_bottom=24, href=dashboard_url)}
 
                 {image_row(img["mtd_kpi_web"])}
                 {month_recap_notice} 
                 {image_row(img["mtd_performance_indicators"])}
-                {image_row(img["mtd_top_subscriptions"], padding_bottom=24)}
+                {image_row(img["mtd_top_subscriptions"], padding_bottom=24, href=dashboard_url)}
 
                 {image_row(img["ytd_kpi_web"])}
                 {image_row(img["ytd_performance_indicators"])}
-                {image_row(img["ytd_top_subscriptions"], padding_bottom=24)}
+                {image_row(img["ytd_top_subscriptions"], padding_bottom=24, href=dashboard_url)}
 
                 {image_row(img["subscription_charts"], width=720)}
 
