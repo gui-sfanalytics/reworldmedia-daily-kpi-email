@@ -63,9 +63,9 @@ SELECT
   p.evol_marketplace_a1_n1 AS evol_marketplace_j_n1,
   p.target_marketplace_a1 AS target_marketplace_j
 
-FROM `reporting.ga4_mail_daily` AS g
+FROM `{dataset}.ga4_mail_daily` AS g
 
-LEFT JOIN `reporting.perf_mail_daily` AS p
+LEFT JOIN `{dataset}.perf_mail_daily` AS p
   ON p.perf_date = DATE_ADD(g.ga4_date, INTERVAL 1 DAY)
 
 WHERE g.ga4_date = "{report_date_minus1}"

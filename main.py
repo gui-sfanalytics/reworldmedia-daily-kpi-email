@@ -43,7 +43,11 @@ ENV = os.getenv("ENV", "local")
 HTML_OUTPUT_DIR = "src/outputs/html"
 PNG_OUTPUT_DIR = "src/outputs/png"
 SQL_DIR = "src/queries"
-DASHBOARD_URL = "https://datastudio.google.com/reporting/e9d439db-932f-4ffe-b67e-decee9e8e30e"
+
+DASHBOARD_URL  = os.environ.get("DASHBOARD_URL", "https://datastudio.google.com/reporting/e9d439db-932f-4ffe-b67e-decee9e8e30e")
+BQ_LOCATION = os.environ.get("BQ_LOCATION", "EU")
+PROJECT_ID  = os.environ.get("PROJECT_ID",  "sfx-reworld-media")
+BQ_DATASET = os.environ.get("BQ_DATASET", "reporting")
 
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
@@ -180,7 +184,7 @@ def main_process(report_date):
         )
         return url
 
-    client = bigquery.Client()
+    client = bigquery.Client(project=PROJECT_ID, location=BQ_LOCATION)
 
     env = Environment(
         loader=FileSystemLoader("templates")
@@ -195,7 +199,7 @@ def main_process(report_date):
         report_date_minus1 = (datetime.strptime(report_date, "%d/%m/%Y") - timedelta(days=1)).strftime("%Y-%m-%d")
 
         with open(SQL_DIR + "/" + query_file, "r", encoding="utf-8") as f:
-            query = f.read().format(report_date=dates['report_day_sql'], report_date_minus1=report_date_minus1)
+            query = f.read().format(report_date=dates['report_day_sql'], report_date_minus1=report_date_minus1, dataset=BQ_DATASET)
 
         query_job = client.query(query)
         rows = list(query_job.result())
@@ -220,7 +224,7 @@ def main_process(report_date):
             kpi["target_percent_clamped"] = min(100, max(0, round(kpi["target_value"] / max_value * 100, 1)))
 
         with open( SQL_DIR + "/" + product_query_file, "r", encoding="utf-8") as f:
-            query = f.read().format(report_date=dates['report_day_sql'])
+            query = f.read().format(report_date=dates['report_day_sql'], dataset=BQ_DATASET)
 
         query_job = client.query(query)
         rows = list(query_job.result())
@@ -456,9 +460,9 @@ def main_process(report_date):
     def get_recipients():
         client = bigquery.Client()
 
-        query = """
+        query = f"""
         SELECT email, type
-        FROM `reporting.email_recipients`
+        FROM `{BQ_DATASET}.email_recipients`
         WHERE actif = TRUE
         """
 
