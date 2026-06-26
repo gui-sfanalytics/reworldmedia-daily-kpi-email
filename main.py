@@ -313,7 +313,7 @@ def main_process(report_date):
 
     def get_subscription_chart_data():
         with open(os.path.join(SQL_DIR, "charts.sql"), "r", encoding="utf-8") as f:
-            query = f.read().format(report_date=dates['report_day_sql'], start_date=dates['first_day_year_last_year_sql'])
+            query = f.read().format(report_date=dates['report_day_sql'], start_date=dates['first_day_year_last_year_sql'], dataset=BQ_DATASET)
 
         rows = list(client.query(query).result())
 
