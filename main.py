@@ -48,6 +48,7 @@ DASHBOARD_URL  = os.environ.get("DASHBOARD_URL", "https://datastudio.google.com/
 BQ_LOCATION = os.environ.get("BQ_LOCATION", "EU")
 PROJECT_ID  = os.environ.get("PROJECT_ID",  "sfx-reworld-media")
 BQ_DATASET = os.environ.get("BQ_DATASET", "reporting")
+BQ_STORAGE = os.environ.get("BQ_STORAGE", "kpi-email-storage")
 
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
@@ -260,7 +261,7 @@ def main_process(report_date):
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",
+            BQ_STORAGE,
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_kpi_web"] = png_url
@@ -285,7 +286,7 @@ def main_process(report_date):
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",
+            BQ_STORAGE,
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_performance_indicators"] = png_url
@@ -306,7 +307,7 @@ def main_process(report_date):
 
         png_url = upload_to_gcs(
             png_file,
-            "kpi-email-storage",
+            BQ_STORAGE,
             f"{run_date_folder}/{os.path.basename(png_file)}"
         )
         image_urls[f"{period_name}_top_subscriptions"] = png_url
@@ -421,10 +422,10 @@ def main_process(report_date):
                 blob_name = f"{mtd_folder}/{key}.png"
                 local_path = f"{PNG_OUTPUT_DIR}/{key}.png"
                 try:
-                    bucket = storage_client.bucket("kpi-email-storage")
+                    bucket = storage_client.bucket(BQ_STORAGE)
                     blob = bucket.blob(blob_name)
                     blob.download_to_filename(local_path)
-                    print(f"  ✓ {key} téléchargé depuis gs://kpi-email-storage/{blob_name} → {local_path}")
+                    print(f"  ✓ {key} téléchargé depuis gs://{BQ_STORAGE}/{blob_name} → {local_path}")
                 except Exception as e:
                     print(f"  ⚠️ Impossible de télécharger {blob_name} : {e} — PNG du jour conservé")
         else:
@@ -432,8 +433,8 @@ def main_process(report_date):
             for key in mtd_keys:
                 blob_name = f"{mtd_folder}/{key}.png"
                 try:
-                    image_urls[key] = get_gcs_signed_url("kpi-email-storage", blob_name)
-                    print(f"  ✓ {key} → gs://kpi-email-storage/{blob_name}")
+                    image_urls[key] = get_gcs_signed_url(BQ_STORAGE, blob_name)
+                    print(f"  ✓ {key} → gs://{BQ_STORAGE}/{blob_name}")
                 except Exception as e:
                     print(f"  ⚠️ Impossible de récupérer {blob_name} : {e} — URL du jour conservée")
 
@@ -447,7 +448,7 @@ def main_process(report_date):
 
     chart_url = upload_to_gcs(
         charts_path,
-        "kpi-email-storage",
+        BQ_STORAGE,
         f"{run_date_folder}/subscription_charts.png"
     )
 
