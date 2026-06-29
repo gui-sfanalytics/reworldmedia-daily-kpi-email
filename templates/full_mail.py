@@ -83,7 +83,7 @@ def build_mail_html(report_date, image_sources=None, is_month_recap=False, dashb
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Reporting Quotidien ReworldMedia</title>
+        <title>Reporting Quotidien Kiosquemag du {report_date}</title>
       </head>
 
       <body bgcolor="#f2f2f2" style="margin:0; padding:0; background-color:#f2f2f2;">
@@ -109,7 +109,7 @@ def build_mail_html(report_date, image_sources=None, is_month_recap=False, dashb
                 <tr>
                   <td bgcolor="#f2f2f2" style="font-family:Georgia, serif; font-size:18px; color:#000000; line-height:28px; padding:0 0 28px 0; background-color:#f2f2f2;">
                     Bonjour,<br>
-                    voici votre rapport du <strong>{report_date}</strong> pour Reworld Media.
+                    voici votre rapport du <strong>{report_date}</strong> pour Kiosquemag.
                   </td>
                 </tr>
 

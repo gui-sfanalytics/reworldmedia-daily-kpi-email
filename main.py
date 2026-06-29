@@ -492,7 +492,7 @@ def main_process(report_date):
             "to": ",".join(to_list),
             "cc": ",".join(cc_list),
             "bcc": ",".join(bcc_list),
-            "subject": "Reporting Quotidien ReworldMedia",
+            "subject": "Reporting Quotidien Kiosquemag du " + dates["report_day"],
             "html": html
         }
 
@@ -552,7 +552,7 @@ def main_process(report_date):
         related = MIMEMultipart("related")
         message.attach(related)
 
-        message["Subject"] = "Reporting Quotidien ReworldMedia"
+        message["Subject"] = f"Reporting Quotidien Kiosquemag du {dates['report_day']}"
         message["From"] = "guillaume@starfox-analytics.com"
         message["To"] = "guillaume@starfox-analytics.com"
 
