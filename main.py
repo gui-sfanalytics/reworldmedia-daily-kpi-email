@@ -59,6 +59,10 @@ MAILJET_SECRET_KEY = _mailjet_creds.get("secret_key")
 MAILJET_FROM_EMAIL = os.environ.get("MAILJET_FROM_EMAIL", "contact@kiosquemag.com")
 MAILJET_FROM_NAME  = os.environ.get("MAILJET_FROM_NAME",  "Reporting Kiosquemag")
 
+# DEBUG temporaire — à retirer après vérification
+print(f"[DEBUG] Mailjet API key chargée : {MAILJET_API_KEY[:6] if MAILJET_API_KEY else 'NONE'}...")
+print(f"[DEBUG] Mailjet Secret key chargée : {MAILJET_SECRET_KEY[:6] if MAILJET_SECRET_KEY else 'NONE'}...")
+
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
 os.makedirs(SQL_DIR, exist_ok=True)
