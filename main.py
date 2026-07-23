@@ -492,12 +492,7 @@ def main_process(report_date):
         return to_list, cc_list, bcc_list
 
     def send_email_mailjet(html):
-        # DEBUG temporaire — à retirer après vérification
-        print(f"[DEBUG] Mailjet API key chargée : {MAILJET_API_KEY[:6] if MAILJET_API_KEY else 'NONE'}...")
-        print(f"[DEBUG] Mailjet Secret key chargée : {MAILJET_SECRET_KEY[:6] if MAILJET_SECRET_KEY else 'NONE'}...")
-
         to_list, cc_list, bcc_list = get_recipients()
-
 
         payload = {
             "FromEmail": MAILJET_FROM_EMAIL,
