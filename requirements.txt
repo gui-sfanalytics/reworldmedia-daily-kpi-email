@@ -9,4 +9,3 @@ google-cloud-storage>=2.16.0
 google-auth==2.29.0
 matplotlib
 flask
-mailjet-rest==1.3.4

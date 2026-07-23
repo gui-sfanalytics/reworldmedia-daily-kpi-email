@@ -15,7 +15,6 @@ from flask import Flask
 import base64
 import requests
 
-from mailjet_rest import Client as MailjetClient
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -58,10 +57,6 @@ MAILJET_API_KEY    = _mailjet_creds.get("api_key")
 MAILJET_SECRET_KEY = _mailjet_creds.get("secret_key")
 MAILJET_FROM_EMAIL = os.environ.get("MAILJET_FROM_EMAIL", "contact@kiosquemag.com")
 MAILJET_FROM_NAME  = os.environ.get("MAILJET_FROM_NAME",  "Reporting Kiosquemag")
-
-# DEBUG temporaire — à retirer après vérification
-print(f"[DEBUG] Mailjet API key chargée : {MAILJET_API_KEY[:6] if MAILJET_API_KEY else 'NONE'}...")
-print(f"[DEBUG] Mailjet Secret key chargée : {MAILJET_SECRET_KEY[:6] if MAILJET_SECRET_KEY else 'NONE'}...")
 
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
@@ -497,25 +492,36 @@ def main_process(report_date):
         return to_list, cc_list, bcc_list
 
     def send_email_mailjet(html):
+        # DEBUG temporaire — à retirer après vérification
+        print(f"[DEBUG] Mailjet API key chargée : {MAILJET_API_KEY[:6] if MAILJET_API_KEY else 'NONE'}...")
+        print(f"[DEBUG] Mailjet Secret key chargée : {MAILJET_SECRET_KEY[:6] if MAILJET_SECRET_KEY else 'NONE'}...")
+
         to_list, cc_list, bcc_list = get_recipients()
-        mailjet = MailjetClient(auth=(MAILJET_API_KEY, MAILJET_SECRET_KEY), version="v3.1")
 
-        message = {
-            "From": {"Email": MAILJET_FROM_EMAIL, "Name": MAILJET_FROM_NAME},
-            "To": [{"Email": e} for e in to_list],
-            "subject": "Reporting Quotidien Kiosquemag du " + dates["report_day"],
-            "HTMLPart": html
+
+        payload = {
+            "FromEmail": MAILJET_FROM_EMAIL,
+            "FromName":  MAILJET_FROM_NAME,
+            "Subject":   "Reporting Quotidien Kiosquemag du " + dates["report_day"],
+            "Html-part": html,
+            "Recipients": [{"Email": e} for e in to_list],
         }
-        if cc_list:   # Mailjet rejette les listes vides → ajout conditionnel
-            message["Cc"]  = [{"Email": e} for e in cc_list]
+
+        if cc_list:
+            payload["Cc"]  = ",".join(cc_list)
         if bcc_list:
-            message["Bcc"] = [{"Email": e} for e in bcc_list]
+            payload["Bcc"] = ",".join(bcc_list)
 
-        result = mailjet.send.create(data={"Messages": [message]})
-        print("Mailjet:", result.status_code, result.json())
+        response = requests.post(
+            "https://api.mailjet.com/v3/send",
+            auth=(MAILJET_API_KEY, MAILJET_SECRET_KEY),
+            json=payload
+        )
 
-        if result.status_code >= 300:
-            raise Exception(f"Email failed via Mailjet: {result.json()}")
+        print("Mailjet:", response.status_code, response.text)
+
+        if response.status_code >= 300:
+            raise Exception(f"Email failed via Mailjet: {response.json()}")
 
     if ENV == "local":
         html = build_mail_html(
