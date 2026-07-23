@@ -47,6 +47,12 @@ python main.py
 Puis ouvrir :
 http://127.0.0.1:8080
 
+Pour envoyer un mail en local à la date d'aujourd'hui
+http://127.0.0.1:8080/run
+
+Pour envoer un mail en local à une date donnée
+http://127.0.0.1:8080/run?date=18/07/2026
+
 ---
 
 ## ☁️ Déploiement Cloud Run

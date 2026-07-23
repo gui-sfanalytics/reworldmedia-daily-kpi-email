@@ -1,9 +1,11 @@
+from pydoc import html
 import sys
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 from werkzeug.exceptions import HTTPException
 
 import os
+import json
 
 from jinja2 import Environment, FileSystemLoader
 from matplotlib import dates
@@ -13,6 +15,7 @@ from flask import Flask
 import base64
 import requests
 
+from mailjet_rest import Client as MailjetClient
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -49,6 +52,12 @@ BQ_LOCATION = os.environ.get("BQ_LOCATION", "EU")
 PROJECT_ID  = os.environ.get("PROJECT_ID",  "sfx-reworld-media")
 BQ_DATASET = os.environ.get("BQ_DATASET", "reporting")
 BQ_STORAGE = os.environ.get("BQ_STORAGE", "kpi-email-storage")
+
+_mailjet_creds     = json.loads(os.environ.get("MAILJET_CREDENTIALS", "{}"))
+MAILJET_API_KEY    = _mailjet_creds.get("api_key")
+MAILJET_SECRET_KEY = _mailjet_creds.get("secret_key")
+MAILJET_FROM_EMAIL = os.environ.get("MAILJET_FROM_EMAIL", "contact@kiosquemag.com")
+MAILJET_FROM_NAME  = os.environ.get("MAILJET_FROM_NAME",  "Reporting Kiosquemag")
 
 os.makedirs(HTML_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PNG_OUTPUT_DIR, exist_ok=True)
@@ -483,25 +492,26 @@ def main_process(report_date):
 
         return to_list, cc_list, bcc_list
 
-    def send_email_n8n(html):
-        url = "https://app.starfox-analytics.com/webhook/gmail-send-html"
-
+    def send_email_mailjet(html):
         to_list, cc_list, bcc_list = get_recipients()
+        mailjet = MailjetClient(auth=(MAILJET_API_KEY, MAILJET_SECRET_KEY), version="v3.1")
 
-        payload = {
-            "to": ",".join(to_list),
-            "cc": ",".join(cc_list),
-            "bcc": ",".join(bcc_list),
+        message = {
+            "From": {"Email": MAILJET_FROM_EMAIL, "Name": MAILJET_FROM_NAME},
+            "To": [{"Email": e} for e in to_list],
             "subject": "Reporting Quotidien Kiosquemag du " + dates["report_day"],
-            "html": html
+            "HTMLPart": html
         }
+        if cc_list:   # Mailjet rejette les listes vides → ajout conditionnel
+            message["Cc"]  = [{"Email": e} for e in cc_list]
+        if bcc_list:
+            message["Bcc"] = [{"Email": e} for e in bcc_list]
 
-        response = requests.post(url, json=payload)
+        result = mailjet.send.create(data={"Messages": [message]})
+        print("Mailjet:", result.status_code, result.json())
 
-        print("n8n:", response.status_code, response.text)
-
-        if response.status_code >= 300:
-            raise Exception("Email failed via n8n")
+        if result.status_code >= 300:
+            raise Exception(f"Email failed via Mailjet: {result.json()}")
 
     if ENV == "local":
         html = build_mail_html(
@@ -588,8 +598,8 @@ def main_process(report_date):
         print("Email sent (LOCAL Gmail)")
 
     else:
-        print("Mode GCP → n8n")
-        send_email_n8n(html)
+        print("Mode GCP → Mailjet")
+        send_email_mailjet(html)
 
 # -----------------------------
 # Setup de l'app
