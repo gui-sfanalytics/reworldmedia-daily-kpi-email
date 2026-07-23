@@ -52,7 +52,7 @@ PROJECT_ID  = os.environ.get("PROJECT_ID",  "sfx-reworld-media")
 BQ_DATASET = os.environ.get("BQ_DATASET", "reporting")
 BQ_STORAGE = os.environ.get("BQ_STORAGE", "kpi-email-storage")
 
-_mailjet_creds     = json.loads(os.environ.get("MAILJET_CREDENTIALS", "{}"))
+_mailjet_creds     = json.loads(os.environ.get("MAILJET_CRED", "{}"))
 MAILJET_API_KEY    = _mailjet_creds.get("api_key")
 MAILJET_SECRET_KEY = _mailjet_creds.get("secret_key")
 MAILJET_FROM_EMAIL = os.environ.get("MAILJET_FROM_EMAIL", "contact@kiosquemag.com")
@@ -521,7 +521,7 @@ def main_process(report_date):
         print("Mailjet:", response.status_code, response.text)
 
         if response.status_code >= 300:
-            raise Exception(f"Email failed via Mailjet: {response.json()}")
+            raise Exception(f"Email failed via Mailjet ({response.status_code}): {response.text}")
 
     if ENV == "local":
         html = build_mail_html(
