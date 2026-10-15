@@ -65,6 +65,71 @@ os.makedirs(SQL_DIR, exist_ok=True)
 print("STORAGE VERSION:", google.cloud.storage.__version__)
 
 # -----------------------------
+# Garde-fou avant envoi (incidents des 14 et 15/10/2026)
+# Si l'import Sylius J-1 a échoué (fichier absent, vide, en retard) ou si les
+# chiffres sont incohérents : pas d'envoi client, alerte à l'équipe interne.
+# -----------------------------
+
+ALERT_EMAILS = [e.strip() for e in os.environ.get(
+    "ALERT_EMAILS", "guillaume@starfox-analytics.com,pierre-etienne@starfox-analytics.com"
+).split(",") if e.strip()]
+MIN_DAILY_ORDERS = int(os.environ.get("MIN_DAILY_ORDERS", "100"))
+
+def check_data_before_send(report_date):
+    """Retourne la liste des problèmes détectés pour report_date (JJ/MM/AAAA). Vide = OK."""
+    report_day = datetime.strptime(report_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+    query = f"""
+        SELECT
+          (SELECT COUNT(DISTINCT order_id) FROM `import_data.sylius_imports`
+            WHERE DATE(CONCAT(purchase_year, '-', purchase_month, '-', purchase_day)) = DATE '{report_day}') AS nb_commandes,
+          (SELECT abo_j FROM `{BQ_DATASET}.perf_mail_daily` WHERE perf_date = DATE '{report_day}') AS abo_j,
+          (SELECT conversions_j FROM `{BQ_DATASET}.ga4_mail_daily` WHERE ga4_date = DATE '{report_day}') AS transactions,
+          (SELECT AVG(conversions_j) FROM `{BQ_DATASET}.ga4_mail_daily`
+            WHERE ga4_date BETWEEN DATE_SUB(DATE '{report_day}', INTERVAL 7 DAY)
+                               AND DATE_SUB(DATE '{report_day}', INTERVAL 1 DAY)) AS transactions_moy7
+    """
+    row = list(bigquery.Client(project=PROJECT_ID, location=BQ_LOCATION).query(query).result())[0]
+
+    problems = []
+    if (row["nb_commandes"] or 0) < MIN_DAILY_ORDERS:
+        problems.append(
+            f"Import Sylius du {report_date} absent ou incomplet : {row['nb_commandes'] or 0} commande(s) en base "
+            f"(minimum attendu : {MIN_DAILY_ORDERS}). Vérifier le fichier export-sylius-km_{report_day.replace('-', '')}.csv sur le SFTP."
+        )
+    if row["abo_j"] is None:
+        problems.append("Aucune donnée dans perf_mail_daily pour ce jour (calculs BigQuery non faits ?).")
+    if row["transactions"] is None:
+        problems.append("Nombre de transactions absent dans ga4_mail_daily.")
+    elif row["transactions_moy7"] and row["transactions"] < 0.5 * row["transactions_moy7"]:
+        problems.append(
+            f"Transactions anormalement basses : {row['transactions']:.0f} contre "
+            f"{row['transactions_moy7']:.0f} en moyenne sur les 7 jours précédents (calculs lancés avant l'import ?)."
+        )
+    return problems
+
+def send_internal_alert(report_date, problems):
+    items = "".join(f"<li>{p}</li>" for p in problems)
+    html = (
+        f"<p>Le reporting Kiosquemag du <b>{report_date}</b> <b>n'a pas été envoyé</b> au client.</p>"
+        f"<ul>{items}</ul>"
+        "<p>Une fois corrigé, relancer le job Scheduler <i>reworldmedia-daily-mail-kpi-sending</i> (Force run). "
+        "Pour envoyer malgré tout : appeler /run?force=1.</p>"
+    )
+    response = requests.post(
+        "https://api.mailjet.com/v3/send",
+        auth=(MAILJET_API_KEY, MAILJET_SECRET_KEY),
+        json={
+            "FromEmail": MAILJET_FROM_EMAIL,
+            "FromName":  MAILJET_FROM_NAME,
+            "Subject":   f"[ALERTE] Reporting Kiosquemag du {report_date} NON envoyé",
+            "Html-part": html,
+            "Recipients": [{"Email": e} for e in ALERT_EMAILS],
+        },
+        timeout=30,
+    )
+    print("Mailjet (alerte interne):", response.status_code, response.text)
+
+# -----------------------------
 # manipulation dates
 # -----------------------------
 
@@ -635,6 +700,14 @@ def run_job():
         else:
             report_date = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
             print(f"[AUTO] report_date = {report_date}") 
+
+        # Garde-fou : pas d'envoi client si l'import J-1 a échoué ou si les chiffres sont incohérents
+        if request.args.get("force") != "1":
+            problems = check_data_before_send(report_date)
+            if problems:
+                print(f"[GARDE-FOU] Envoi client bloqué pour {report_date} : {problems}")
+                send_internal_alert(report_date, problems)
+                return f"Envoi bloqué pour {report_date} : {' | '.join(problems)}", 500
 
         print("Process started")
         main_process(report_date)
